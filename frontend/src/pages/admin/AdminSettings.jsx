@@ -17,7 +17,7 @@ const AdminSettings = () => {
 
   const handleSave = (e) => {
     e.preventDefault();
-    showToast('Settings saved successfully.');
+    showToast('Settings cannot be saved until the backend is connected.', 'warning');
   };
 
   return (

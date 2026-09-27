@@ -70,29 +70,7 @@ const Register = () => {
     e.preventDefault();
     if (!validate()) return;
     
-    setIsLoading(true);
-    
-    // Simulate API registration call
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      
-      const payload = {
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        country: formData.country,
-        accountType: formData.accountType.toLowerCase(),
-        ...(formData.accountType === 'Business' ? { businessName: formData.businessName } : {})
-      };
-      
-      console.log('Registered User Payload:', payload);
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
-      
-    }, 1200);
+    setErrors({ general: 'Account registration is currently unavailable. Please contact support for access.' });
   };
 
   // Minimal Password Strength logic
@@ -223,6 +201,8 @@ const Register = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <p className="text-sm text-textSecondary">Account registration is currently unavailable. Contact support for access.</p>
+                {errors.general && <p role="alert" className="text-red-600">{errors.general}</p>}
                 
                 {/* Full Name */}
                 <div>

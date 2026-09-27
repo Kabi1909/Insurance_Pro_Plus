@@ -1,6 +1,6 @@
 import React, { createContext, useState } from 'react';
 import { ADMIN_EMAIL, isAdminCredentials } from '../utils/credentials';
-import { readSession, writeSession, clearSession } from '../utils/session';
+import { readSession, writeSession, clearSession, updateSession } from '../utils/session';
 
 export const AdminAuthContext = createContext();
 export const AdminAuthProvider = ({ children }) => {
@@ -19,6 +19,11 @@ export const AdminAuthProvider = ({ children }) => {
     setAdmin(adminData);
     return adminData;
   };
+  const updateProfile = (fields) => {
+    const updated = { ...admin, ...fields };
+    updateSession('ipp_admin', updated);
+    setAdmin(updated);
+  };
   const logout = () => { clearSession('ipp_admin'); setAdmin(null); };
-  return <AdminAuthContext.Provider value={{ admin, login, logout, loading: false }}>{children}</AdminAuthContext.Provider>;
+  return <AdminAuthContext.Provider value={{ admin, login, logout, updateProfile, loading: false }}>{children}</AdminAuthContext.Provider>;
 };

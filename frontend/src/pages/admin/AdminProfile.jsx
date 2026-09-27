@@ -5,20 +5,26 @@ import Modal from '../../components/admin/Modal';
 import { showToast } from '../../utils/toast';
 
 const AdminProfile = () => {
-  const { admin, login } = useContext(AdminAuthContext);
+  const { admin, updateProfile } = useContext(AdminAuthContext);
   const [showEdit, setShowEdit] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleEditProfile = (e) => {
     e.preventDefault();
-    setShowEdit(false);
-    showToast('Profile updated successfully.');
+    const data = new FormData(e.currentTarget);
+    const name = data.get('name').trim();
+    if (!name) return showToast('Full name is required.', 'error');
+    try {
+      updateProfile({ name, phone: data.get('phone').trim() });
+      setShowEdit(false);
+      showToast('Profile updated successfully.');
+    } catch (error) { showToast(error.message, 'error'); }
   };
 
   const handleChangePassword = (e) => {
     e.preventDefault();
     setShowPassword(false);
-    showToast('Password changed successfully.');
+    showToast('Password changes are unavailable in this demo. Your password has not changed.', 'warning');
   };
 
   if (!admin) return null;
@@ -74,7 +80,7 @@ const AdminProfile = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1 flex items-center gap-2"><Phone className="h-4 w-4" /> Phone</p>
-                <p className="font-semibold text-slate-900">+94 77 000 0000</p>
+                <p className="font-semibold text-slate-900">{admin.phone || "+94 77 000 0000"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1 flex items-center gap-2"><Briefcase className="h-4 w-4" /> Role</p>
@@ -106,7 +112,7 @@ const AdminProfile = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Two-Factor Authentication</p>
-                <p className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4" /> Enabled</p>
+                <p className="font-semibold text-green-600 flex items-center gap-1">Unavailable in demo</p>
               </div>
             </div>
           </div>
@@ -118,11 +124,11 @@ const AdminProfile = () => {
          <form onSubmit={handleEditProfile} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input type="text" defaultValue={admin.name} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <input type="text" name="name" required defaultValue={admin.name} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input type="text" defaultValue="+94 77 000 0000" className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <input type="text" name="phone" defaultValue={admin.phone || "+94 77 000 0000"} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
             </div>
             <div className="pt-4 flex justify-end gap-3">
                <button type="button" onClick={() => setShowEdit(false)} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Cancel</button>

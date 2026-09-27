@@ -1,9 +1,22 @@
+import { showToast } from '../utils/toast';
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { User, Mail, Globe, Briefcase, Phone, Save, Lock, Bell, Shield } from 'lucide-react';
 
 const Profile = () => {
-  const { user } = useContext(AuthContext);
+  const { user, updateProfile } = useContext(AuthContext);
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const name = data.get('name').trim();
+    if (!name) return showToast('Full name is required.', 'error');
+    try {
+      updateProfile({ name, phone: data.get('phone').trim(), country: data.get('country').trim(),
+        ...(user.accountType === 'Business' ? { businessName: data.get('businessName').trim() } : {}) });
+      showToast('Profile updated successfully.');
+    } catch (error) { showToast(error.message, 'error'); }
+  };
 
   if (!user) return null;
 
@@ -28,13 +41,13 @@ const Profile = () => {
               </div>
             </div>
 
-            <form className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-textMain mb-1">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
-                    <input type="text" defaultValue={user.name} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
+                    <input type="text" name="name" required defaultValue={user.name} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                 </div>
                 <div>
@@ -48,14 +61,14 @@ const Profile = () => {
                   <label className="block text-sm font-medium text-textMain mb-1">Phone Number</label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
-                    <input type="tel" defaultValue={user.phone} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
+                    <input type="tel" name="phone" defaultValue={user.phone} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-textMain mb-1">Country</label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
-                    <input type="text" defaultValue={user.country} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
+                    <input type="text" name="country" defaultValue={user.country} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
                   </div>
                 </div>
               </div>
@@ -67,14 +80,14 @@ const Profile = () => {
                     <label className="block text-sm font-medium text-textMain mb-1">Business Name</label>
                     <div className="relative">
                       <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
-                      <input type="text" defaultValue={user.businessName} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
+                      <input type="text" name="businessName" defaultValue={user.businessName} className="w-full pl-9 pr-3 py-2 border border-borderMain rounded-md text-sm focus:ring-2 focus:ring-primary outline-none" />
                     </div>
                   </div>
                 </div>
               )}
 
               <div className="pt-4 flex justify-end">
-                <button type="button" className="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-primary-dark flex items-center gap-2 transition-colors">
+                <button type="submit" className="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-primary-dark flex items-center gap-2 transition-colors">
                   <Save className="h-4 w-4" /> Save Changes
                 </button>
               </div>
@@ -87,7 +100,7 @@ const Profile = () => {
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
             <h2 className="text-lg font-bold text-textMain mb-4 border-b border-borderMain pb-2">Security</h2>
             <div className="space-y-4">
-              <button className="w-full flex items-center justify-between p-3 border border-borderMain rounded-lg hover:bg-gray-50 transition-colors">
+              <button onClick={() => showToast("Password changes are unavailable in this demo.", "warning")} className="w-full flex items-center justify-between p-3 border border-borderMain rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-3">
                   <Lock className="h-5 w-5 text-textSecondary" />
                   <div className="text-left">
@@ -103,11 +116,11 @@ const Profile = () => {
                     <p className="text-sm font-medium text-textMain">Two-Factor Auth</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" value="" className="sr-only peer" />
+                    <input type="checkbox" disabled value="" className="sr-only peer" />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
-                <p className="text-xs text-textSecondary pl-8">Add an extra layer of security to your account.</p>
+                <p className="text-xs text-textSecondary pl-8">Two-factor authentication is unavailable in this demo.</p>
               </div>
             </div>
           </div>

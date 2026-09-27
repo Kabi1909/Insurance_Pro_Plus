@@ -28,3 +28,7 @@ export function writeSession(key, value, remember = false) {
     throw new Error('Unable to save your session. Allow browser storage and try again.');
   }
 }
+
+export function updateSession(key, value) {
+  writeSession(key, value, localStorage.getItem(key) !== null);
+}
