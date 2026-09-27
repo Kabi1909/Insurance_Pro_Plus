@@ -1,11 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AdminAuthContext } from '../../context/AdminAuthContext';
 import { Shield, Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('admin@insuranceproplus.com');
-  const [password, setPassword] = useState('Admin@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -93,11 +93,11 @@ const AdminLogin = () => {
             )}
             
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-slate-700 block">Work Email</label>
+              <label htmlFor="admin-email" className="text-sm font-semibold text-slate-700 block">Work Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input 
-                  type="email" 
+                  id="admin-email" autoComplete="username" type="email" 
                   required
                   placeholder="name@insuranceproplus.com"
                   className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
@@ -108,11 +108,11 @@ const AdminLogin = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-slate-700 block">Password</label>
+              <label htmlFor="admin-password" className="text-sm font-semibold text-slate-700 block">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <input 
-                  type={showPassword ? 'text' : 'password'} 
+                  id="admin-password" autoComplete="current-password" type={showPassword ? 'text' : 'password'} 
                   required
                   placeholder="Enter your password"
                   className="w-full pl-10 pr-12 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
@@ -122,6 +122,7 @@ const AdminLogin = () => {
                 <button 
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -134,9 +135,9 @@ const AdminLogin = () => {
                 <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                 <span className="text-sm text-slate-600">Remember me</span>
               </label>
-              <button type="button" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+              <Link to="/support" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
             <button 

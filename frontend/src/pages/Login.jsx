@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Eye, EyeOff, Mail, Lock, FileText, CreditCard, Headphones, BarChart3, Quote, ShieldCheck, GraduationCap, ArrowRight } from 'lucide-react';
+import { Shield, Eye, EyeOff, Mail, Lock, FileText, CreditCard, Headphones, BarChart3, Quote, ShieldCheck, ArrowRight } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { AdminAuthContext } from '../context/AdminAuthContext';
 import { ADMIN_EMAIL, normalizeEmail, isCustomerCredentials } from '../utils/credentials';
@@ -18,15 +18,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [demoNotice, setDemoNotice] = useState(false);
-
-  const fillDemoCredentials = () => {
-    setFormData({ email: 'albert@demo.com', password: 'Albert123' });
-    setErrors({});
-    setDemoNotice(true);
-    setTimeout(() => setDemoNotice(false), 3000);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -176,13 +167,13 @@ const Login = () => {
             
             {/* Email Field */}
             <div>
-              <label className="block text-[14px] font-bold text-[#071A3D] mb-2">Email Address</label>
+              <label htmlFor="login-email" className="block text-[14px] font-bold text-[#071A3D] mb-2">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-[#A0B0C7]" />
                 </div>
                 <input
-                  type="email"
+                  id="login-email" autoComplete="username" type="email"
                   placeholder="name@example.com"
                   className={`w-full h-[52px] pl-11 pr-4 bg-white border ${errors.email ? 'border-red-400 focus:ring-red-500/20' : 'border-[#D8E4F2] focus:border-[#0866FF] focus:ring-[#0866FF]/20'} rounded-[8px] text-[15px] text-[#071A3D] placeholder-[#A0B0C7] focus:outline-none focus:ring-4 transition-all`}
                   value={formData.email}
@@ -194,13 +185,13 @@ const Login = () => {
 
             {/* Password Field */}
             <div>
-              <label className="block text-[14px] font-bold text-[#071A3D] mb-2">Password</label>
+              <label htmlFor="login-password" className="block text-[14px] font-bold text-[#071A3D] mb-2">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-[#A0B0C7]" />
                 </div>
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  id="login-password" autoComplete="current-password" type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   className={`w-full h-[52px] pl-11 pr-11 bg-white border ${errors.password ? 'border-red-400 focus:ring-red-500/20' : 'border-[#D8E4F2] focus:border-[#0866FF] focus:ring-[#0866FF]/20'} rounded-[8px] text-[15px] text-[#071A3D] placeholder-[#A0B0C7] focus:outline-none focus:ring-4 transition-all`}
                   value={formData.password}
@@ -209,6 +200,7 @@ const Login = () => {
                 <button 
                   type="button" 
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#A0B0C7] hover:text-[#071A3D] transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -223,7 +215,7 @@ const Login = () => {
                 <input type="checkbox" className="w-[18px] h-[18px] text-[#0866FF] border-[#D8E4F2] rounded focus:ring-[#0866FF]" />
                 <span className="ml-2.5 text-[15px] text-[#52627A]">Remember me</span>
               </label>
-              <a href="#" className="text-[14px] font-bold text-[#0866FF] hover:text-[#0057E7] transition-colors">
+              <Link to="/support" className="text-[14px] font-bold text-[#0866FF] hover:text-[#0057E7] transition-colors">
                 Forgot password?
               </a>
             </div>
@@ -248,36 +240,8 @@ const Login = () => {
                 Create Account
               </Link>
             </div>
+            <p className="text-center text-sm"><Link to="/admin/login" className="text-primary font-semibold">Administrator sign in</Link></p>
           </form>
-        </div>
-
-        {/* Demo Credentials Card */}
-        <div 
-          onClick={fillDemoCredentials}
-          className="w-full max-w-[560px] bg-[#F5FAFF] border border-[#0866FF]/20 rounded-[10px] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-[#eef6ff] transition-colors group relative"
-        >
-           <div className="flex gap-3">
-             <div className="w-[36px] h-[36px] rounded-full bg-[#0866FF]/10 flex items-center justify-center shrink-0">
-               <GraduationCap className="w-5 h-5 text-[#0866FF]" />
-             </div>
-             <div>
-               <h4 className="font-bold text-[#071A3D] text-[14px]">Demo Credentials (For Testing)</h4>
-               <p className="text-[#52627A] text-[13px]">Click to use the following credentials to explore the system:</p>
-             </div>
-           </div>
-           
-           <div className="hidden sm:block w-px h-10 bg-[#D8E4F2] shrink-0"></div>
-           
-           <div className="text-[13px] bg-white sm:bg-transparent p-3 sm:p-0 rounded border sm:border-0 border-[#D8E4F2] w-full sm:w-auto">
-              <div className="flex gap-2 mb-1"><span className="text-[#52627A]">Email:</span> <strong className="text-[#071A3D]">albert@demo.com</strong></div>
-              <div className="flex gap-2"><span className="text-[#52627A]">Password:</span> <strong className="text-[#071A3D]">Albert123</strong></div>
-           </div>
-
-           {demoNotice && (
-             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#071A3D] text-white text-[12px] py-1.5 px-3 rounded-md shadow-lg transition-all duration-300 whitespace-nowrap">
-               Demo credentials filled
-             </div>
-           )}
         </div>
 
         {/* Trust Features (Bottom) */}
