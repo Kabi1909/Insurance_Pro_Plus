@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, User, Mail, Phone, MapPin, Briefcase, FileText, AlertCircle, DollarSign, Calendar } from 'lucide-react';
+import { ChevronLeft, User, Mail, Phone, MapPin, Briefcase, FileText, AlertCircle, DollarSign, Calendar, Building } from 'lucide-react';
 import StatusBadge from '../../components/admin/StatusBadge';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { showToast } from '../../utils/toast';

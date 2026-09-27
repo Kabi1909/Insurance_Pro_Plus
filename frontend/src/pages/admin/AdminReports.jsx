@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Download, DollarSign, AlertCircle, FileText, Users, Activity } from 'lucide-react';
+import { CheckCircle, Calendar, Download, DollarSign, AlertCircle, FileText, Users, Activity } from 'lucide-react';
 import StatCard from '../../components/admin/StatCard';
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, LineChart, Line } from 'recharts';
 import { showToast } from '../../utils/toast';
@@ -214,3 +214,5 @@ const AdminReports = () => {
 };
 
 export default AdminReports;
+
+
