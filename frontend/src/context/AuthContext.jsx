@@ -1,32 +1,13 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
+import { readSession, writeSession, clearSession } from '../utils/session';
 
 export const AuthContext = createContext();
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('ipp_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-
-  const login = (userData) => {
+  const [user, setUser] = useState(() => readSession('ipp_user'));
+  const login = (userData, remember = false) => {
+    writeSession('ipp_user', userData, remember);
     setUser(userData);
-    localStorage.setItem('ipp_user', JSON.stringify(userData));
   };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('ipp_user');
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  const logout = () => { clearSession('ipp_user'); setUser(null); };
+  return <AuthContext.Provider value={{ user, login, logout, loading: false }}>{children}</AuthContext.Provider>;
 };

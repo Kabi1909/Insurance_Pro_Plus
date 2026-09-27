@@ -15,6 +15,7 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -36,10 +37,10 @@ const Login = () => {
     setErrors({});
     try {
       if (normalizeEmail(formData.email) === ADMIN_EMAIL) {
-        await loginAdmin(formData.email, formData.password);
+        await loginAdmin(formData.email, formData.password, remember);
         navigate('/admin/dashboard', { replace: true });
       } else if (isCustomerCredentials(formData.email, formData.password)) {
-        login(getDemoUser());
+        login(getDemoUser(), remember);
         navigate('/dashboard', { replace: true });
       } else {
         setErrors({ general: 'Email or password is incorrect.' });
@@ -212,12 +213,12 @@ const Login = () => {
             {/* Remember & Forgot */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
               <label className="flex items-center cursor-pointer">
-                <input type="checkbox" className="w-[18px] h-[18px] text-[#0866FF] border-[#D8E4F2] rounded focus:ring-[#0866FF]" />
+                <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} className="w-[18px] h-[18px] text-[#0866FF] border-[#D8E4F2] rounded focus:ring-[#0866FF]" />
                 <span className="ml-2.5 text-[15px] text-[#52627A]">Remember me</span>
               </label>
               <Link to="/support" className="text-[14px] font-bold text-[#0866FF] hover:text-[#0057E7] transition-colors">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             {/* Submit Button */}

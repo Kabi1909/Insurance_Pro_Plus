@@ -30,8 +30,7 @@ const AdminLayout = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const storedAdmin = localStorage.getItem('ipp_admin');
-  const currentAdmin = admin || (storedAdmin ? JSON.parse(storedAdmin) : null);
+  const currentAdmin = admin;
 
   if (!currentAdmin) {
     return <Navigate to="/admin/login" replace />;

@@ -6,6 +6,7 @@ import { Shield, Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from 'lucide-re
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,7 +19,7 @@ const AdminLogin = () => {
     setLoading(true);
     
     try {
-      await login(email, password);
+      await login(email, password, remember);
       // Simulating a professional toast
       const toast = document.createElement('div');
       toast.className = "fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center font-medium";
@@ -132,7 +133,7 @@ const AdminLogin = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                 <span className="text-sm text-slate-600">Remember me</span>
               </label>
               <Link to="/support" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">

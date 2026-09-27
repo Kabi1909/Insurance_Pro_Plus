@@ -1,51 +1,24 @@
-import React, { createContext, useState, useEffect } from 'react';
-
-import { isAdminCredentials } from '../utils/credentials';
+import React, { createContext, useState } from 'react';
+import { ADMIN_EMAIL, isAdminCredentials } from '../utils/credentials';
+import { readSession, writeSession, clearSession } from '../utils/session';
 
 export const AdminAuthContext = createContext();
-
 export const AdminAuthProvider = ({ children }) => {
-  const [admin, setAdmin] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const storedAdmin = localStorage.getItem('ipp_admin');
-    if (storedAdmin) {
-      setAdmin(JSON.parse(storedAdmin));
-    }
-    setLoading(false);
-  }, []);
-
-  const login = (email, password) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (isAdminCredentials(email, password)) {
-          const adminData = {
-            name: 'Insurance Pro Plus Admin',
-            email: 'admin@insuranceproplus.com',
-            role: 'System Administrator',
-            department: 'Administration',
-            status: 'Active',
-            id: 'ADM-001'
-          };
-          setAdmin(adminData);
-          localStorage.setItem('ipp_admin', JSON.stringify(adminData));
-          resolve(adminData);
-        } else {
-          reject(new Error('Invalid email or password.'));
-        }
-      }, 800); // Simulate network delay
-    });
+  const [admin, setAdmin] = useState(() => {
+    const stored = readSession('ipp_admin');
+    return stored?.email === ADMIN_EMAIL && stored?.role === 'System Administrator' ? stored : null;
+  });
+  const login = async (email, password, remember = false) => {
+    if (!isAdminCredentials(email, password)) throw new Error('Invalid email or password.');
+    const adminData = {
+      name: 'Insurance Pro Plus Admin', email: ADMIN_EMAIL,
+      role: 'System Administrator', department: 'Administration',
+      status: 'Active', id: 'ADM-001',
+    };
+    writeSession('ipp_admin', adminData, remember);
+    setAdmin(adminData);
+    return adminData;
   };
-
-  const logout = () => {
-    setAdmin(null);
-    localStorage.removeItem('ipp_admin');
-  };
-
-  return (
-    <AdminAuthContext.Provider value={{ admin, login, logout, loading }}>
-      {!loading && children}
-    </AdminAuthContext.Provider>
-  );
+  const logout = () => { clearSession('ipp_admin'); setAdmin(null); };
+  return <AdminAuthContext.Provider value={{ admin, login, logout, loading: false }}>{children}</AdminAuthContext.Provider>;
 };
