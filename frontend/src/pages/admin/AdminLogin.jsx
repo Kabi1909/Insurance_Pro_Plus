@@ -1,3 +1,4 @@
+import { showToast } from '../../utils/toast';
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AdminAuthContext } from '../../context/AdminAuthContext';
@@ -20,14 +21,8 @@ const AdminLogin = () => {
     
     try {
       await login(email, password, remember);
-      // Simulating a professional toast
-      const toast = document.createElement('div');
-      toast.className = "fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center font-medium";
-      toast.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Login successful`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-      
-      navigate('/admin/dashboard');
+      showToast('Login successful');
+      navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
