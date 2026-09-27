@@ -2,7 +2,7 @@ import { showToast } from '../../utils/toast';
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AdminAuthContext } from '../../context/AdminAuthContext';
-import { Shield, Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { Shield, Eye, EyeOff, Lock, Mail, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -70,6 +70,9 @@ const AdminLogin = () => {
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12">
         <div className="w-full max-w-md">
+          <Link to="/" className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 transition-colors">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to Home
+          </Link>
           <div className="lg:hidden flex items-center gap-2 justify-center mb-8">
              <Shield className="h-8 w-8 text-blue-600" />
              <span className="text-2xl font-bold text-slate-900">Insurance Pro Plus</span>

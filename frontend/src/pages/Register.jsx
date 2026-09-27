@@ -13,7 +13,6 @@ import {
   FileText, 
   CreditCard, 
   Headphones, 
-  Quote, 
   ArrowRight,
   Shield
 } from 'lucide-react';
@@ -83,98 +82,41 @@ const Register = () => {
   return (
     <div className="w-full min-h-[calc(100vh-75px)] flex flex-col lg:flex-row bg-white font-sans">
       
-      {/* LEFT SECTION (54%) */}
-      <div className="hidden lg:flex w-[54%] bg-[#F6FAFF] relative overflow-hidden flex-col pt-12 pl-12 xl:pl-20">
-        
-        {/* Top Badge */}
-        <div className="relative z-10 flex items-center gap-2 bg-[#EAF5FF] w-max px-3 py-1.5 rounded-full mb-6">
-          <ShieldCheck className="w-4 h-4 text-[#0866FF]" />
-          <span className="text-[#0866FF] text-[13px] font-semibold">Trusted by Individuals and Businesses</span>
-        </div>
-
-        {/* Headings */}
-        <div className="relative z-10 max-w-[520px]">
-          <h1 className="text-[54px] xl:text-[60px] font-[800] leading-[1.1] text-[#071A3D] mb-4 tracking-tight">
-            Start Your <br />
-            Insurance <span className="text-[#0866FF]">Journey</span>
-          </h1>
-          <p className="text-[18px] xl:text-[20px] text-[#52627A] leading-relaxed mb-10 max-w-[500px]">
-            Create an account and get access to complete insurance solutions for you and your business.
-          </p>
-          
-          {/* Features Vertical List */}
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-[48px] h-[48px] rounded-full bg-[#EAF5FF] flex items-center justify-center shrink-0">
-                <Shield className="w-6 h-6 text-[#0866FF]" fill="currentColor" strokeWidth={1} />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#071A3D] text-[17px]">Wide Range of Plans</h3>
-                <p className="text-[#52627A] text-[15px]">Personal and business insurance in one place.</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-4">
-              <div className="w-[48px] h-[48px] rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
-                <FileText className="w-6 h-6 text-[#10A66A]" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#071A3D] text-[17px]">Easy Policy Management</h3>
-                <p className="text-[#52627A] text-[15px]">View, renew or cancel anytime.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-[48px] h-[48px] rounded-full bg-[#FFF3E5] flex items-center justify-center shrink-0">
-                <CreditCard className="w-6 h-6 text-[#FF8A1F]" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#071A3D] text-[17px]">Secure Payments</h3>
-                <p className="text-[#52627A] text-[15px]">Multiple payment options</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-[48px] h-[48px] rounded-full bg-[#F3E8FF] flex items-center justify-center shrink-0">
-                <Headphones className="w-6 h-6 text-[#7137E8]" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#071A3D] text-[17px]">24/7 Support</h3>
-                <p className="text-[#52627A] text-[15px]">Always here to help.</p>
-              </div>
-            </div>
+      {/* Shared cover for Individual and Business accounts. Keep copy in normal flow. */}
+      <section className="w-full lg:w-[54%] shrink-0 bg-[#F6FAFF] px-6 py-10 sm:px-10 lg:p-12 xl:p-16">
+        <div className="max-w-xl mx-auto">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-2 text-xs sm:text-sm font-semibold text-blue-700 mb-6">
+            <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" /> For individuals and businesses
           </div>
+          <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight text-[#071A3D] mb-5">
+            Start Your Insurance <span className="text-[#0866FF]">Journey</span>
+          </h1>
+          <p className="text-lg leading-relaxed text-[#52627A] mb-8">
+            Create an account and explore insurance solutions for yourself, your family and your business.
+          </p>
+          <div className="hidden lg:grid grid-cols-2 gap-x-6 gap-y-7 mb-10">
+            {[
+              { icon: Shield, title: 'Wide Range of Plans', text: 'Personal and business cover in one place.' },
+              { icon: FileText, title: 'Policy Management', text: 'Keep your insurance details organized.' },
+              { icon: CreditCard, title: 'Payment Overview', text: 'Stay informed about your premiums.' },
+              { icon: Headphones, title: 'Helpful Support', text: 'Find answers when you need them.' },
+            ].map(({ icon: Icon, title, text }) => (
+              <div key={title}>
+                <Icon className="w-6 h-6 text-[#0866FF] mb-3" aria-hidden="true" />
+                <h2 className="font-bold text-[#071A3D] mb-1">{title}</h2>
+                <p className="text-sm text-[#52627A] leading-relaxed">{text}</p>
+              </div>
+            ))}
+          </div>
+          <figure className="overflow-hidden rounded-2xl border border-[#D8E4F2] bg-white shadow-sm">
+            <img src="/images/businesswoman.jpg" alt="Professional working on a laptop" className="w-full h-56 sm:h-72 lg:h-80 object-cover object-center" />
+            <figcaption className="bg-[#0F2747] p-5 sm:p-6 text-white">
+              <p className="text-xl font-bold mb-2">Your future. Your business. Your peace of mind.</p>
+              <p className="text-sm leading-relaxed text-blue-100">A simpler way to explore protection for what matters to you.</p>
+            </figcaption>
+          </figure>
         </div>
-
-        {/* Abstract Background Shapes */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#EAF5FF] rounded-full blur-[80px] opacity-60 -translate-y-1/2 translate-x-1/3 z-0"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#EAF5FF] rounded-full blur-[100px] opacity-60 translate-y-1/4 -translate-x-1/4 z-0"></div>
-
-        {/* Woman Image Area */}
-        <div className="absolute bottom-0 right-0 w-[65%] max-w-[600px] h-[75%] z-10 pointer-events-none">
-           <img 
-             src="/images/businesswoman.jpg" 
-             alt="Professional working on laptop" 
-             className="w-full h-full object-cover object-left-top rounded-tl-[80px]" 
-           />
-           
-           {/* Gradient overlay to fade the image into the background on the left and top */}
-           <div className="absolute inset-0 bg-gradient-to-r from-[#F6FAFF] via-[#F6FAFF]/70 to-transparent w-[45%]"></div>
-           <div className="absolute inset-0 bg-gradient-to-b from-[#F6FAFF] via-[#F6FAFF]/30 to-transparent h-[25%]"></div>
-        </div>
-
-        {/* Floating Testimonial Card */}
-        <div className="absolute bottom-[60px] left-[40px] xl:left-[80px] bg-white/95 backdrop-blur-sm p-6 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.06)] max-w-[360px] z-20">
-           <Quote className="w-8 h-8 text-[#0866FF] mb-3 opacity-80" fill="currentColor" strokeWidth={0} />
-           <p className="text-[#071A3D] font-medium text-[15px] leading-relaxed mb-3">
-             “Insurance Pro Plus made it easy for me to protect my family and business. The registration process was simple and quick!”
-           </p>
-           <p className="text-[#52627A] text-[13px] mb-2">— Albert, Small Business Owner</p>
-           <div className="flex gap-1">
-             {[1,2,3,4,5].map(i => <svg key={i} className="w-4 h-4 text-[#FFB000]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
-           </div>
-        </div>
-      </div>
+      </section>
 
       {/* RIGHT SECTION (46%) */}
       <div className="w-full lg:w-[46%] bg-gradient-to-b from-[#F6FAFF] to-white flex flex-col items-center justify-center py-10 px-4 sm:px-8 relative overflow-y-auto">
