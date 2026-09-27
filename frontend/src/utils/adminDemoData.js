@@ -1,4 +1,4 @@
-import { readCollection } from './storage';
+import { readCollection } from './storage.js';
 export const initializeAdminDemoData = () => {
     // Generate realistic mock data for admin
     if (readCollection('ipp_admin_claims', null) === null) {

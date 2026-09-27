@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import StatCard from '../../components/admin/StatCard';
@@ -6,6 +7,7 @@ import DataTable from '../../components/admin/DataTable';
 import { Search, Filter, Users, Building, Download } from 'lucide-react';
 
 const AdminCustomers = () => {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -15,7 +17,8 @@ const AdminCustomers = () => {
   }, []);
 
   const filteredCustomers = customers.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -30,7 +33,7 @@ const AdminCustomers = () => {
     { 
       header: 'Actions', 
       render: (row) => (
-        <button className="text-blue-600 hover:text-blue-800 font-medium text-xs">
+        <button onClick={() => navigate(`/admin/customers/${row.id}`)} className="text-blue-600 hover:text-blue-800 font-medium text-xs">
           View Profile
         </button>
       ) 

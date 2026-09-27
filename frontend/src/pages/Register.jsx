@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
   User, 
@@ -20,7 +20,6 @@ import {
 
 
 const Register = () => {
-  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -36,8 +35,6 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -185,15 +182,6 @@ const Register = () => {
         {/* Main Register Card */}
         <div className="w-full max-w-[560px] bg-white rounded-[16px] shadow-[0_4px_30px_rgba(0,0,0,0.03)] border border-[#D8E4F2] p-6 sm:p-10 my-auto">
           
-          {isSuccess ? (
-            <div className="text-center py-12 animate-fade-in-up">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#ECFDF5] mb-6">
-                <ShieldCheck className="h-8 w-8 text-[#10A66A]" />
-              </div>
-              <h2 className="text-[28px] font-bold text-[#071A3D] mb-3">Account created successfully!</h2>
-              <p className="text-[#52627A]">Redirecting you to the login page...</p>
-            </div>
-          ) : (
             <>
               <div className="mb-8">
                 <h2 className="text-[36px] sm:text-[40px] font-bold text-[#071A3D] mb-2 tracking-tight leading-tight">Create Your Account</h2>
@@ -416,12 +404,9 @@ const Register = () => {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={isLoading}
                     className="w-full h-[52px] flex justify-center items-center gap-2 rounded-[8px] font-bold text-[16px] text-white bg-[#0866FF] hover:bg-[#0057E7] disabled:opacity-70 disabled:cursor-not-allowed transition-colors shadow-[0_4px_14px_rgba(8,102,255,0.25)]"
                   >
-                    {isLoading ? 'Creating Account...' : (
-                      <>Create Account <ArrowRight className="w-5 h-5" /></>
-                    )}
+                    <>Create Account <ArrowRight className="w-5 h-5" /></>
                   </button>
                 </div>
 
@@ -434,7 +419,6 @@ const Register = () => {
                 </div>
               </form>
             </>
-          )}
         </div>
 
       </div>

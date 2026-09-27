@@ -1,4 +1,4 @@
-import { readCollection } from './storage';
+import { readCollection } from './storage.js';
 export const getDemoUser = () => ({
   id: 'usr_albert_123',
   name: 'Albert',

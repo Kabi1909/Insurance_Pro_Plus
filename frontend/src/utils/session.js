@@ -1,6 +1,7 @@
 export function readSession(key) {
-  for (const storage of [sessionStorage, localStorage]) {
+  for (const getStorage of [() => sessionStorage, () => localStorage]) {
     try {
+      const storage = getStorage();
       const value = JSON.parse(storage.getItem(key) || 'null');
       if (value && typeof value === 'object' && !Array.isArray(value) &&
           typeof value.name === 'string' && typeof value.email === 'string' &&
@@ -8,15 +9,15 @@ export function readSession(key) {
       storage.removeItem(key);
     } catch {
       // A stale or malformed demo session must not prevent the app loading.
-      try { storage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+      try { getStorage().removeItem(key); } catch { /* Storage may be unavailable. */ }
     }
   }
   return null;
 }
 
 export function clearSession(key) {
-  for (const storage of [sessionStorage, localStorage]) {
-    try { storage.removeItem(key); } catch { /* Logout still clears React state. */ }
+  for (const getStorage of [() => sessionStorage, () => localStorage]) {
+    try { getStorage().removeItem(key); } catch { /* Logout still clears React state. */ }
   }
 }
 

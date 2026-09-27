@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import StatCard from '../../components/admin/StatCard';
@@ -6,6 +7,7 @@ import DataTable from '../../components/admin/DataTable';
 import { Search, Filter, FileText } from 'lucide-react';
 
 const AdminPolicies = () => {
+  const navigate = useNavigate();
   const [policies, setPolicies] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -31,7 +33,7 @@ const AdminPolicies = () => {
     { 
       header: 'Actions', 
       render: (row) => (
-        <button className="text-blue-600 hover:text-blue-800 font-medium text-xs">
+        <button onClick={() => navigate(`/admin/policies/${row.number}`)} className="text-blue-600 hover:text-blue-800 font-medium text-xs">
           View Policy
         </button>
       ) 

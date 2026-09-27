@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useContext } from 'react';
 import { AdminAuthContext } from '../../context/AdminAuthContext';
 import StatCard from '../../components/admin/StatCard';
@@ -42,6 +43,7 @@ const recentClaims = [
 ];
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { admin } = useContext(AdminAuthContext);
 
   return (
@@ -182,7 +184,7 @@ const AdminDashboard = () => {
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-slate-200 flex justify-between items-center">
             <h2 className="text-lg font-bold text-slate-900">Recent Claims</h2>
-            <button className="text-sm font-semibold text-blue-600 hover:text-blue-800">View All Claims</button>
+            <button onClick={() => navigate("/admin/claims")} className="text-sm font-semibold text-blue-600 hover:text-blue-800">View All Claims</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -209,7 +211,7 @@ const AdminDashboard = () => {
                     <td className="p-4"><StatusBadge status={claim.status} /></td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                         <button className="text-blue-600 hover:text-blue-800 font-medium text-xs bg-blue-50 px-2 py-1 rounded">Review</button>
+                         <button onClick={() => navigate(`/admin/claims/${claim.id}`)} className="text-blue-600 hover:text-blue-800 font-medium text-xs bg-blue-50 px-2 py-1 rounded">Review</button>
                       </div>
                     </td>
                   </tr>
