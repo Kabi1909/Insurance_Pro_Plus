@@ -29,7 +29,7 @@ const AuthLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   const sidebarLinks = [

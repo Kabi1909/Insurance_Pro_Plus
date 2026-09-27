@@ -1,3 +1,4 @@
+import MissingRecord from '../components/MissingRecord';
 import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -10,14 +11,10 @@ const ClaimDetails = () => {
   useEffect(() => {
     const storedClaims = readCollection('ipp_claims');
     const foundClaim = storedClaims.find(c => c.id === id);
-    if (foundClaim) {
-      setClaim(foundClaim);
-    }
+    setClaim(foundClaim || null);
   }, [id]);
 
-  if (!claim) {
-    return <div className="p-8 text-center text-textSecondary">Loading claim details...</div>;
-  }
+  if (!claim) return <MissingRecord label="Claim" backTo="/claims" />;
 
   const getStatusIcon = (status) => {
     if (status === 'Completed' || status === 'Approved') return <CheckCircle className="h-5 w-5 text-success" />;

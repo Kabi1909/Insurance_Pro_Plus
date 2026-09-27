@@ -1,3 +1,4 @@
+import MissingRecord from '../../components/MissingRecord';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -17,10 +18,10 @@ const AdminPolicyDetails = () => {
   useEffect(() => {
     const data = readCollection('ipp_admin_policies');
     const found = data.find(p => p.number === id);
-    if (found) setPolicy(found);
+    setPolicy(found || null);
   }, [id]);
 
-  if (!policy) return <div className="p-8 text-center text-slate-500">Loading policy details...</div>;
+  if (!policy) return <MissingRecord label="Policy" backTo="/admin/policies" />;
 
   const handleAction = (action, confirmStateSetter) => {
     const newStatus = action === 'Suspend' ? 'Suspended' : 'Cancelled';

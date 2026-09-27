@@ -1,3 +1,4 @@
+import MissingRecord from '../../components/MissingRecord';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -16,10 +17,10 @@ const AdminCustomerDetails = () => {
   useEffect(() => {
     const data = readCollection('ipp_admin_customers');
     const found = data.find(c => c.id === id);
-    if (found) setCustomer(found);
+    setCustomer(found || null);
   }, [id]);
 
-  if (!customer) return <div className="p-8 text-center text-slate-500">Loading customer details...</div>;
+  if (!customer) return <MissingRecord label="Customer" backTo="/admin/customers" />;
 
   const handleSuspend = () => {
     const isSuspending = customer.status === 'Active';

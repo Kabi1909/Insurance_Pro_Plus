@@ -1,3 +1,4 @@
+import MissingRecord from '../components/MissingRecord';
 import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
@@ -18,9 +19,7 @@ const PolicyDetails = () => {
   useEffect(() => {
     const storedPolicies = readCollection('ipp_policies');
     const foundPolicy = storedPolicies.find(p => p.id === id);
-    if (foundPolicy) {
-      setPolicy(foundPolicy);
-    }
+    setPolicy(foundPolicy || null);
   }, [id]);
 
   const handleConfirmRenewal = () => {
@@ -64,13 +63,7 @@ const PolicyDetails = () => {
     navigate(`/policies/${id}`, { replace: true });
   };
 
-  if (!policy) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (!policy) return <MissingRecord label="Policy" backTo="/policies" />;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

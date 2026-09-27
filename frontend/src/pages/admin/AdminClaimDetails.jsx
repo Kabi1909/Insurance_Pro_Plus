@@ -1,3 +1,4 @@
+import MissingRecord from '../../components/MissingRecord';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -30,10 +31,10 @@ const AdminClaimDetails = () => {
   useEffect(() => {
     const claims = readCollection('ipp_admin_claims');
     const found = claims.find(c => c.id === id);
-    if (found) setClaim(found);
+    setClaim(found || null);
   }, [id]);
 
-  if (!claim) return <div className="p-8 text-center text-slate-500">Loading claim details...</div>;
+  if (!claim) return <MissingRecord label="Claim" backTo="/admin/claims" />;
 
   const handleAction = (type) => {
     setActionType(type);
