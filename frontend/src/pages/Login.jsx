@@ -2,11 +2,14 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Mail, Lock, FileText, CreditCard, Headphones, BarChart3, Quote, ShieldCheck, GraduationCap, ArrowRight } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { AdminAuthContext } from '../context/AdminAuthContext';
+import { ADMIN_EMAIL, normalizeEmail, isCustomerCredentials } from '../utils/credentials';
 import { getDemoUser } from '../utils/demoData';
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+  const { login: loginAdmin } = useContext(AdminAuthContext);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -24,11 +27,11 @@ const Login = () => {
     setTimeout(() => setDemoNotice(false), 3000);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!formData.email) newErrors.email = "Email address is required.";
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Please enter a valid email address.";
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) newErrors.email = "Please enter a valid email address.";
     
     if (!formData.password) newErrors.password = "Password is required.";
     
@@ -39,16 +42,22 @@ const Login = () => {
     
     setIsLoading(true);
     
-    // Simulate network delay
-    setTimeout(() => {
-      if (formData.email === 'albert@demo.com' && formData.password === 'Albert123') {
+    setErrors({});
+    try {
+      if (normalizeEmail(formData.email) === ADMIN_EMAIL) {
+        await loginAdmin(formData.email, formData.password);
+        navigate('/admin/dashboard', { replace: true });
+      } else if (isCustomerCredentials(formData.email, formData.password)) {
         login(getDemoUser());
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       } else {
-        setErrors({ general: "Email or password is incorrect." });
-        setIsLoading(false);
+        setErrors({ general: 'Email or password is incorrect.' });
       }
-    }, 800);
+    } catch (error) {
+      setErrors({ general: error.message });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

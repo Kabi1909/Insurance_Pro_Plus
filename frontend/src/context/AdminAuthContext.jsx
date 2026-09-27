@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 
+import { isAdminCredentials } from '../utils/credentials';
+
 export const AdminAuthContext = createContext();
 
 export const AdminAuthProvider = ({ children }) => {
@@ -17,9 +19,7 @@ export const AdminAuthProvider = ({ children }) => {
   const login = (email, password) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        const cleanEmail = email.trim().toLowerCase();
-        const cleanPassword = password.trim();
-        if (cleanEmail === 'admin@insuranceproplus.com' && cleanPassword === 'Admin@123') {
+        if (isAdminCredentials(email, password)) {
           const adminData = {
             name: 'Insurance Pro Plus Admin',
             email: 'admin@insuranceproplus.com',
