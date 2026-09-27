@@ -1,3 +1,4 @@
+import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ChevronRight, FileText, Download, ShieldAlert, CheckCircle } from 'lucide-react';
@@ -15,7 +16,7 @@ const PolicyDetails = () => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const storedPolicies = JSON.parse(localStorage.getItem('ipp_policies') || '[]');
+    const storedPolicies = readCollection('ipp_policies');
     const foundPolicy = storedPolicies.find(p => p.id === id);
     if (foundPolicy) {
       setPolicy(foundPolicy);
@@ -24,7 +25,7 @@ const PolicyDetails = () => {
 
   const handleConfirmRenewal = () => {
     // Update local storage demo data
-    const storedPolicies = JSON.parse(localStorage.getItem('ipp_policies') || '[]');
+    const storedPolicies = readCollection('ipp_policies');
     const updatedPolicies = storedPolicies.map(p => {
       if (p.id === id) {
         // Simple renewal logic: add 1 year to renewal date
@@ -40,7 +41,7 @@ const PolicyDetails = () => {
     setPolicy(updatedPolicies.find(p => p.id === id));
     
     // Also add a payment record
-    const storedPayments = JSON.parse(localStorage.getItem('ipp_payments') || '[]');
+    const storedPayments = readCollection('ipp_payments');
     storedPayments.unshift({
       id: `PAY-${Date.now().toString().slice(-4)}`,
       policy: policy.name,

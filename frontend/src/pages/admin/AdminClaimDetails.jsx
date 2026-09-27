@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, CheckCircle, XCircle, FileText, User, Shield, Paperclip, Clock, MessageSquare, Briefcase, Plus } from 'lucide-react';
@@ -27,7 +28,7 @@ const AdminClaimDetails = () => {
   const [newNote, setNewNote] = useState('');
 
   useEffect(() => {
-    const claims = JSON.parse(localStorage.getItem('ipp_admin_claims') || '[]');
+    const claims = readCollection('ipp_admin_claims');
     const found = claims.find(c => c.id === id);
     if (found) setClaim(found);
   }, [id]);
@@ -40,7 +41,7 @@ const AdminClaimDetails = () => {
   };
 
   const confirmAction = () => {
-    const claims = JSON.parse(localStorage.getItem('ipp_admin_claims') || '[]');
+    const claims = readCollection('ipp_admin_claims');
     const updated = claims.map(c => c.id === id ? { ...c, status: actionType === 'approve' ? 'Approved' : 'Rejected' } : c);
     localStorage.setItem('ipp_admin_claims', JSON.stringify(updated));
     setClaim({ ...claim, status: actionType === 'approve' ? 'Approved' : 'Rejected' });
@@ -50,7 +51,7 @@ const AdminClaimDetails = () => {
 
   const handleAssign = (e) => {
     e.preventDefault();
-    const claims = JSON.parse(localStorage.getItem('ipp_admin_claims') || '[]');
+    const claims = readCollection('ipp_admin_claims');
     const updated = claims.map(c => c.id === id ? { ...c, officer: selectedOfficer } : c);
     localStorage.setItem('ipp_admin_claims', JSON.stringify(updated));
     setClaim({ ...claim, officer: selectedOfficer });
@@ -60,7 +61,7 @@ const AdminClaimDetails = () => {
 
   const handleRequestInfo = (e) => {
     e.preventDefault();
-    const claims = JSON.parse(localStorage.getItem('ipp_admin_claims') || '[]');
+    const claims = readCollection('ipp_admin_claims');
     const updated = claims.map(c => c.id === id ? { ...c, status: 'Additional Information Required' } : c);
     localStorage.setItem('ipp_admin_claims', JSON.stringify(updated));
     setClaim({ ...claim, status: 'Additional Information Required' });

@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/admin/StatCard';
@@ -15,7 +16,7 @@ const AdminStaff = () => {
   const [newStaff, setNewStaff] = useState({ firstName: '', lastName: '', email: '', phone: '', empId: '', department: 'Claims', role: 'Claims Officer' });
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_staff') || '[]');
+    const data = readCollection('ipp_admin_staff');
     setStaffList(data);
   }, []);
 

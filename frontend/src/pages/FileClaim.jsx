@@ -1,3 +1,4 @@
+import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Upload, File, X, AlertCircle } from 'lucide-react';
@@ -21,7 +22,7 @@ const FileClaim = () => {
   const [submittedRef, setSubmittedRef] = useState(null);
 
   useEffect(() => {
-    const storedPolicies = JSON.parse(localStorage.getItem('ipp_policies') || '[]');
+    const storedPolicies = readCollection('ipp_policies');
     setPolicies(storedPolicies.filter(p => p.status === 'Active'));
   }, []);
 
@@ -61,7 +62,7 @@ const FileClaim = () => {
         description: formData.description
       };
 
-      const existingClaims = JSON.parse(localStorage.getItem('ipp_claims') || '[]');
+      const existingClaims = readCollection('ipp_claims');
       localStorage.setItem('ipp_claims', JSON.stringify([newClaim, ...existingClaims]));
       
       setSubmittedRef(ref);

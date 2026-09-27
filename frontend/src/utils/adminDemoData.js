@@ -1,6 +1,7 @@
+import { readCollection } from './storage';
 export const initializeAdminDemoData = () => {
     // Generate realistic mock data for admin
-    if (!localStorage.getItem('ipp_admin_claims')) {
+    if (readCollection('ipp_admin_claims', null) === null) {
         localStorage.setItem('ipp_admin_claims', JSON.stringify([
             { id: 'CLM-10482', customer: 'Nimal Perera', policy: 'POL-23892', type: 'Motor', amount: 325000, submittedDate: 'Sep 25, 2026', status: 'Under Review', officer: 'A. Fernando' },
             { id: 'CLM-10483', customer: 'Sunil Silva', policy: 'POL-19882', type: 'Health', amount: 45000, submittedDate: 'Sep 24, 2026', status: 'Additional Information Required', officer: 'M. Perera' },
@@ -11,7 +12,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_customers')) {
+    if (readCollection('ipp_admin_customers', null) === null) {
         localStorage.setItem('ipp_admin_customers', JSON.stringify([
             { id: 'CUS-10291', name: 'Nimal Perera', type: 'Individual', email: 'nimal.p@example.com', policies: 2, totalPremium: 145000, status: 'Active', joined: 'Jan 15, 2024' },
             { id: 'CUS-10292', name: 'Sunil Silva', type: 'Individual', email: 'sunil.s@example.com', policies: 1, totalPremium: 45000, status: 'Active', joined: 'Mar 22, 2025' },
@@ -21,7 +22,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_policies')) {
+    if (readCollection('ipp_admin_policies', null) === null) {
         localStorage.setItem('ipp_admin_policies', JSON.stringify([
              { number: 'POL-23892', holder: 'Nimal Perera', type: 'Motor', coverage: 5000000, premium: 85000, startDate: 'Jan 15, 2026', expiryDate: 'Jan 14, 2027', paymentStatus: 'Paid', status: 'Active' },
              { number: 'POL-19882', holder: 'Sunil Silva', type: 'Health', coverage: 1000000, premium: 45000, startDate: 'Mar 22, 2026', expiryDate: 'Mar 21, 2027', paymentStatus: 'Paid', status: 'Active' },
@@ -30,7 +31,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_payments')) {
+    if (readCollection('ipp_admin_payments', null) === null) {
         localStorage.setItem('ipp_admin_payments', JSON.stringify([
             { id: 'TXN-88372', customer: 'Nimal Perera', policy: 'POL-23892', amount: 85000, method: 'Credit Card', date: 'Jan 10, 2026', status: 'Paid' },
             { id: 'TXN-88373', customer: 'Sunil Silva', policy: 'POL-19882', amount: 45000, method: 'Bank Transfer', date: 'Mar 15, 2026', status: 'Paid' },
@@ -39,7 +40,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_documents')) {
+    if (readCollection('ipp_admin_documents', null) === null) {
         localStorage.setItem('ipp_admin_documents', JSON.stringify([
             { id: 'DOC-001', name: 'Accident_Photos.zip', type: 'Archive', size: '4.2 MB', customer: 'Nimal Perera', related: 'CLM-10482', uploadDate: 'Sep 25, 2026', uploadedBy: 'Customer', status: 'Verified', category: 'Claim Documents' },
             { id: 'DOC-002', name: 'Police_Report_Copy.pdf', type: 'PDF', size: '1.1 MB', customer: 'Nimal Perera', related: 'CLM-10482', uploadDate: 'Sep 25, 2026', uploadedBy: 'Customer', status: 'Pending Verification', category: 'Claim Documents' },
@@ -49,7 +50,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_staff')) {
+    if (readCollection('ipp_admin_staff', null) === null) {
         localStorage.setItem('ipp_admin_staff', JSON.stringify([
             { id: 'STF-00124', name: 'Insurance Pro Plus Admin', email: 'admin@insuranceproplus.com', role: 'System Administrator', department: 'Administration', assignedClaims: 0, status: 'Active', joinedDate: 'Jan 01, 2020', lastActive: 'Just now' },
             { id: 'STF-00125', name: 'A. Fernando', email: 'a.fernando@insuranceproplus.com', role: 'Claims Officer', department: 'Claims', assignedClaims: 12, status: 'Active', joinedDate: 'Mar 15, 2021', lastActive: '2 hours ago' },
@@ -59,7 +60,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_audit')) {
+    if (readCollection('ipp_admin_audit', null) === null) {
         localStorage.setItem('ipp_admin_audit', JSON.stringify([
             { id: 'AUD-991', date: 'Sep 27, 2026 10:45 AM', staff: 'Insurance Pro Plus Admin', role: 'System Administrator', action: 'Approved Claim', resource: 'Claim', resourceId: 'CLM-10482', ip: '192.168.1.45', status: 'Success' },
             { id: 'AUD-992', date: 'Sep 27, 2026 09:30 AM', staff: 'A. Fernando', role: 'Claims Officer', action: 'Reviewed Claim', resource: 'Claim', resourceId: 'CLM-10483', ip: '192.168.1.112', status: 'Success' },
@@ -69,7 +70,7 @@ export const initializeAdminDemoData = () => {
         ]));
     }
 
-    if (!localStorage.getItem('ipp_admin_notifications')) {
+    if (readCollection('ipp_admin_notifications', null) === null) {
         localStorage.setItem('ipp_admin_notifications', JSON.stringify([
             { id: 'NOT-01', title: 'New claim submitted', description: 'New claim CLM-10482 has been submitted.', time: '5 min ago', category: 'Claims', read: false, resourceId: 'CLM-10482' },
             { id: 'NOT-02', title: 'Payment failed', description: 'Payment failed for policy POL-44219.', time: '20 min ago', category: 'Payments', read: false, resourceId: 'POL-44219' },

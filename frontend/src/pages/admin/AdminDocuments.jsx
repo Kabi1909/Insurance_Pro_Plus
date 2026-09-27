@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, FileText, CheckCircle, Clock, XCircle, FileImage, File, Upload, Grid, List, Download, Eye } from 'lucide-react';
 import StatCard from '../../components/admin/StatCard';
@@ -17,7 +18,7 @@ const AdminDocuments = () => {
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_documents') || '[]');
+    const data = readCollection('ipp_admin_documents');
     setDocuments(data);
   }, []);
 

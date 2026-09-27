@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/admin/StatCard';
@@ -9,7 +10,7 @@ const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('All');
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_notifications') || '[]');
+    const data = readCollection('ipp_admin_notifications');
     setNotifications(data);
   }, []);
 

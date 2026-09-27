@@ -1,3 +1,4 @@
+import { readCollection } from '../utils/storage';
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -11,11 +12,11 @@ const Dashboard = () => {
   const [payments, setPayments] = useState([]);
 
   useEffect(() => {
-    const storedPolicies = JSON.parse(localStorage.getItem('ipp_policies') || '[]');
+    const storedPolicies = readCollection('ipp_policies');
     setPolicies(storedPolicies);
-    const storedClaims = JSON.parse(localStorage.getItem('ipp_claims') || '[]');
+    const storedClaims = readCollection('ipp_claims');
     setClaims(storedClaims);
-    const storedPayments = JSON.parse(localStorage.getItem('ipp_payments') || '[]');
+    const storedPayments = readCollection('ipp_payments');
     setPayments(storedPayments);
   }, []);
 

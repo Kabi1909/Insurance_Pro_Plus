@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, User, Mail, Phone, Briefcase, Building, ShieldAlert, CheckCircle, Clock } from 'lucide-react';
@@ -15,7 +16,7 @@ const AdminStaffDetails = () => {
   const [showEdit, setShowEdit] = useState(false);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_staff') || '[]');
+    const data = readCollection('ipp_admin_staff');
     const found = data.find(s => s.id === id);
     if (found) setStaff(found);
   }, [id]);
@@ -26,7 +27,7 @@ const AdminStaffDetails = () => {
     const isSuspending = staff.status === 'Active';
     const newStatus = isSuspending ? 'Suspended' : 'Active';
     
-    const data = JSON.parse(localStorage.getItem('ipp_admin_staff') || '[]');
+    const data = readCollection('ipp_admin_staff');
     const updated = data.map(s => s.id === id ? { ...s, status: newStatus } : s);
     localStorage.setItem('ipp_admin_staff', JSON.stringify(updated));
     setStaff({ ...staff, status: newStatus });

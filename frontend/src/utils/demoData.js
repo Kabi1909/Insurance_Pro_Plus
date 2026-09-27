@@ -1,3 +1,4 @@
+import { readCollection } from './storage';
 export const getDemoUser = () => ({
   id: 'usr_albert_123',
   name: 'Albert',
@@ -9,7 +10,7 @@ export const getDemoUser = () => ({
 });
 
 export const initializeDemoData = () => {
-  if (!localStorage.getItem('ipp_policies')) {
+  if (readCollection('ipp_policies', null) === null) {
     const policies = [
       {
         id: 'IPP-BP-2026-001',
@@ -51,7 +52,7 @@ export const initializeDemoData = () => {
     localStorage.setItem('ipp_policies', JSON.stringify(policies));
   }
 
-  if (!localStorage.getItem('ipp_claims')) {
+  if (readCollection('ipp_claims', null) === null) {
     const claims = [
       {
         id: 'CLM-2026-0045',
@@ -68,7 +69,7 @@ export const initializeDemoData = () => {
     localStorage.setItem('ipp_claims', JSON.stringify(claims));
   }
 
-  if (!localStorage.getItem('ipp_payments')) {
+  if (readCollection('ipp_payments', null) === null) {
     const payments = [
       { id: 'PAY-1001', policy: 'Business Property Insurance', date: 'Sep 15, 2026', amount: '$250', method: 'Credit Card', status: 'Completed' },
       { id: 'PAY-1002', policy: 'Business Vehicle Insurance', date: 'Sep 15, 2026', amount: '$150', method: 'Credit Card', status: 'Completed' },

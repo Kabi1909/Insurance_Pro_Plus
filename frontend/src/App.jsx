@@ -1,9 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout';
 import AuthLayout from './layouts/AuthLayout';
-import { initializeDemoData } from './utils/demoData';
-import { initializeAdminDemoData } from './utils/adminDemoData';
 
 // Public Pages
 import Home from './pages/Home';
@@ -52,10 +50,6 @@ import AdminProfile from './pages/admin/AdminProfile';
 import AdminHelp from './pages/admin/AdminHelp';
 
 function App() {
-  useEffect(() => {
-    initializeDemoData();
-    initializeAdminDemoData();
-  }, []);
 
   return (
     <Routes>

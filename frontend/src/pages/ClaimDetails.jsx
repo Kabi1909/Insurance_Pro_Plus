@@ -1,3 +1,4 @@
+import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, FileText, CheckCircle, Clock, AlertCircle, MessageSquare } from 'lucide-react';
@@ -7,7 +8,7 @@ const ClaimDetails = () => {
   const [claim, setClaim] = useState(null);
 
   useEffect(() => {
-    const storedClaims = JSON.parse(localStorage.getItem('ipp_claims') || '[]');
+    const storedClaims = readCollection('ipp_claims');
     const foundClaim = storedClaims.find(c => c.id === id);
     if (foundClaim) {
       setClaim(foundClaim);

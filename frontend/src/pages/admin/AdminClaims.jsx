@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/admin/StatCard';
@@ -11,7 +12,7 @@ const AdminClaims = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_claims') || '[]');
+    const data = readCollection('ipp_admin_claims');
     setClaims(data);
   }, []);
 

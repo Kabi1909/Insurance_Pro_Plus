@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import StatCard from '../../components/admin/StatCard';
 import StatusBadge from '../../components/admin/StatusBadge';
@@ -9,7 +10,7 @@ const AdminAuditLogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_audit') || '[]');
+    const data = readCollection('ipp_admin_audit');
     setLogs(data);
   }, []);
 

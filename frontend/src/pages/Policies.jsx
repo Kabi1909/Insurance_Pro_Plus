@@ -1,3 +1,4 @@
+import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, FileText } from 'lucide-react';
@@ -9,7 +10,7 @@ const Policies = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const storedPolicies = JSON.parse(localStorage.getItem('ipp_policies') || '[]');
+    const storedPolicies = readCollection('ipp_policies');
     setPolicies(storedPolicies);
   }, []);
 

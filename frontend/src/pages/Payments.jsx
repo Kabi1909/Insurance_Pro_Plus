@@ -1,3 +1,4 @@
+import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, Download, Lock, CheckCircle } from 'lucide-react';
 
@@ -17,9 +18,9 @@ const Payments = () => {
   });
 
   useEffect(() => {
-    const storedPayments = JSON.parse(localStorage.getItem('ipp_payments') || '[]');
+    const storedPayments = readCollection('ipp_payments');
     setPayments(storedPayments);
-    const storedPolicies = JSON.parse(localStorage.getItem('ipp_policies') || '[]');
+    const storedPolicies = readCollection('ipp_policies');
     setPolicies(storedPolicies.filter(p => p.status === 'Active'));
   }, []);
 

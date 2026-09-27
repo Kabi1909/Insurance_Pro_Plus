@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Shield, User, DollarSign, Calendar, FileText, CheckCircle, AlertTriangle, FileCheck, XCircle } from 'lucide-react';
@@ -14,7 +15,7 @@ const AdminPolicyDetails = () => {
   const [showCancel, setShowCancel] = useState(false);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_policies') || '[]');
+    const data = readCollection('ipp_admin_policies');
     const found = data.find(p => p.number === id);
     if (found) setPolicy(found);
   }, [id]);
@@ -23,7 +24,7 @@ const AdminPolicyDetails = () => {
 
   const handleAction = (action, confirmStateSetter) => {
     const newStatus = action === 'Suspend' ? 'Suspended' : 'Cancelled';
-    const data = JSON.parse(localStorage.getItem('ipp_admin_policies') || '[]');
+    const data = readCollection('ipp_admin_policies');
     const updated = data.map(p => p.number === id ? { ...p, status: newStatus } : p);
     localStorage.setItem('ipp_admin_policies', JSON.stringify(updated));
     setPolicy({ ...policy, status: newStatus });

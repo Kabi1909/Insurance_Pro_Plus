@@ -1,3 +1,4 @@
+import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, User, Mail, Phone, MapPin, Briefcase, FileText, AlertCircle, DollarSign, Calendar, Building } from 'lucide-react';
@@ -13,7 +14,7 @@ const AdminCustomerDetails = () => {
   const [showSuspend, setShowSuspend] = useState(false);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('ipp_admin_customers') || '[]');
+    const data = readCollection('ipp_admin_customers');
     const found = data.find(c => c.id === id);
     if (found) setCustomer(found);
   }, [id]);
@@ -24,7 +25,7 @@ const AdminCustomerDetails = () => {
     const isSuspending = customer.status === 'Active';
     const newStatus = isSuspending ? 'Suspended' : 'Active';
     
-    const data = JSON.parse(localStorage.getItem('ipp_admin_customers') || '[]');
+    const data = readCollection('ipp_admin_customers');
     const updated = data.map(c => c.id === id ? { ...c, status: newStatus } : c);
     localStorage.setItem('ipp_admin_customers', JSON.stringify(updated));
     setCustomer({ ...customer, status: newStatus });
