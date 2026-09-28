@@ -1,0 +1,16 @@
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), textarea, select) {
+  transition: border-color var(--ipp-fast), box-shadow var(--ipp-medium),
+    background-color var(--ipp-fast);
+}
+:where(input, textarea, select):not(:disabled):not([readonly]):focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--ipp-ring);
+}
+:where(input[type="checkbox"], input[type="radio"], input[type="range"]) {
+  accent-color: var(--color-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  :where(input, textarea, select):not(:disabled):not([readonly]):not(:focus):hover {
+    border-color: rgb(100 116 139 / 65%);
+  }
+}
