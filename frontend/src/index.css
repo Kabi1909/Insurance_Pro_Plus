@@ -10,6 +10,7 @@
 @import "./styles/badges.css";
 @import "./styles/imagery.css";
 @import "./styles/headings.css";
+@import "./styles/accessibility.css";
 
 @theme {
   --color-primary: #2563EB;
