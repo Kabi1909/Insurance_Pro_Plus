@@ -1,0 +1,12 @@
+:where(main span.rounded-full.text-xs) {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 45%);
+  transition: box-shadow var(--ipp-medium);
+}
+:where(main .grid > .bg-white) :is(.h-12.w-12, .w-12.h-12) > svg {
+  transition: transform var(--ipp-medium) var(--ipp-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  :where(main .grid > .bg-white):hover :is(.h-12.w-12, .w-12.h-12) > svg {
+    transform: rotate(-5deg) scale(1.08);
+  }
+}
