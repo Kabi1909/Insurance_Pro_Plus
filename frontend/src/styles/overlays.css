@@ -1,0 +1,15 @@
+/* Do not animate layout ancestors: fixed dialogs keep their viewport anchor. */
+.fixed.inset-0:has(> .bg-white) {
+  animation: ipp-fade-in var(--ipp-fast) ease-out;
+}
+.fixed.inset-0 > .bg-white {
+  animation: ipp-panel-in var(--ipp-medium) var(--ipp-ease);
+}
+header .absolute.top-full.bg-white,
+header > .absolute.bg-white {
+  transform-origin: top center;
+  animation: ipp-panel-in var(--ipp-medium) var(--ipp-ease);
+}
+header .absolute.top-full.bg-white button {
+  transition: background-color var(--ipp-fast), color var(--ipp-fast);
+}
