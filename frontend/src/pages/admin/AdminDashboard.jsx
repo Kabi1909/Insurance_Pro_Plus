@@ -1,3 +1,6 @@
+import { useAnalytics } from '../../utils/useAnalytics';
+import { money, download } from '../../utils/api';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import React, { useContext } from 'react';
 import { AdminAuthContext } from '../../context/AdminAuthContext';
@@ -6,43 +9,11 @@ import StatusBadge from '../../components/admin/StatusBadge';
 import { Users, FileText, AlertCircle, DollarSign, Activity, Calendar } from 'lucide-react';
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts';
 
-const revenueData = [
-  { name: 'Jan', revenue: 18.2 },
-  { name: 'Feb', revenue: 19.5 },
-  { name: 'Mar', revenue: 21.0 },
-  { name: 'Apr', revenue: 20.2 },
-  { name: 'May', revenue: 22.5 },
-  { name: 'Jun', revenue: 23.1 },
-  { name: 'Jul', revenue: 22.8 },
-  { name: 'Aug', revenue: 24.2 },
-  { name: 'Sep', revenue: 24.8 },
-];
-
-const claimsData = [
-  { name: 'Jan', submitted: 120, approved: 95, rejected: 15 },
-  { name: 'Feb', submitted: 132, approved: 105, rejected: 18 },
-  { name: 'Mar', submitted: 145, approved: 110, rejected: 25 },
-  { name: 'Apr', submitted: 125, approved: 98, rejected: 20 },
-  { name: 'May', submitted: 150, approved: 120, rejected: 22 },
-  { name: 'Jun', submitted: 165, approved: 135, rejected: 20 },
-];
-
-const policyDistribution = [
-  { name: 'Motor', value: 38, color: '#2563EB' },
-  { name: 'Health', value: 26, color: '#0F766E' },
-  { name: 'Life', value: 18, color: '#F59E0B' },
-  { name: 'Home', value: 11, color: '#8B5CF6' },
-  { name: 'Business', value: 7, color: '#64748B' },
-];
-
-const recentClaims = [
-  { id: 'CLM-10482', customer: 'Nimal Perera', policy: 'POL-23892', type: 'Motor', amount: 'LKR 325,000', date: 'Sep 25, 2026', status: 'Under Review', officer: 'A. Fernando' },
-  { id: 'CLM-10483', customer: 'Sunil Silva', policy: 'POL-19882', type: 'Health', amount: 'LKR 45,000', date: 'Sep 24, 2026', status: 'Additional Information Required', officer: 'M. Perera' },
-  { id: 'CLM-10484', customer: 'Kamal Jayasinghe', policy: 'POL-44321', type: 'Life', amount: 'LKR 1,200,000', date: 'Sep 20, 2026', status: 'Approved', officer: 'S. Bandara' },
-  { id: 'CLM-10485', customer: 'Saman Kumara', policy: 'POL-11234', type: 'Home', amount: 'LKR 850,000', date: 'Sep 18, 2026', status: 'Paid', officer: 'A. Fernando' },
-];
-
 const AdminDashboard = () => {
+  const [days, setDays] = useState(30);
+  const [type, setType] = useState('');
+  const stats=useAnalytics(days,type);
+  const { revenueData, claimsData, policyDistribution, recentClaims, paymentStatus, customerGrowth, claimsByType }=stats;
   const navigate = useNavigate();
   const { admin } = useContext(AdminAuthContext);
 
@@ -54,11 +25,11 @@ const AdminDashboard = () => {
           <p className="text-slate-500">Here's what's happening with Insurance Pro Plus today.</p>
         </div>
         <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors text-sm font-medium">
+           <button onClick={()=>setDays(days===30?365:30)} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors text-sm font-medium">
              <Calendar className="h-4 w-4 text-slate-500" />
-             Last 30 Days
+             Last {days} Days
            </button>
-           <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm">
+           <button onClick={()=>download('/admin/export?kind=payments&format=pdf&days='+days)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm">
              Generate Report
            </button>
         </div>
@@ -66,12 +37,12 @@ const AdminDashboard = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Total Customers" value="12,458" icon={Users} trend="+8.2%" trendLabel="this month" color="blue" />
-        <StatCard title="Active Policies" value="9,842" icon={FileText} trend="+5.4%" color="green" />
-        <StatCard title="Open Claims" value="386" icon={AlertCircle} trendLabel="42 require attention" color="yellow" />
-        <StatCard title="Premium Collected" value="LKR 24.8M" icon={DollarSign} trend="+12.5%" color="blue" />
-        <StatCard title="Claims Paid" value="LKR 8.4M" icon={Activity} color="green" />
-        <StatCard title="Expiring Policies" value="127" icon={Calendar} trendLabel="Next 30 days" color="red" />
+        <StatCard title="Total Customers" value={stats.customers} icon={Users} trendLabel="this month" color="blue" />
+        <StatCard title="Active Policies" value={stats.activePolicies} icon={FileText} color="green" />
+        <StatCard title="Open Claims" value={stats.openClaims} icon={AlertCircle} color="yellow" />
+        <StatCard title="Premium Collected" value={money(stats.premium)} icon={DollarSign} color="blue" />
+        <StatCard title="Claims Paid" value={money(stats.claimsPaid)} icon={Activity} color="green" />
+        <StatCard title="Expiring Policies" value={stats.expiring} icon={Calendar} trendLabel="Next 30 days" color="red" />
       </div>
 
       {/* Charts Row 1 */}
@@ -81,11 +52,11 @@ const AdminDashboard = () => {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Premium Revenue</h2>
-              <p className="text-sm text-slate-500">Total Premium Collected: LKR 24.8M</p>
+              <p className="text-sm text-slate-500">Total Premium Collected: {money(stats.premium)}</p>
             </div>
-            <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none">
-              <option>This Year</option>
-              <option>Last Year</option>
+            <select value={days} onChange={e=>setDays(Number(e.target.value))} className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none">
+              <option value="365">Last Year</option>
+              <option value="30">Last 30 Days</option>
             </select>
           </div>
           <div className="h-72">
@@ -99,7 +70,7 @@ const AdminDashboard = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} tickFormatter={(value) => `${value}M`} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} tickFormatter={(value) => money(value)} />
                 <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                 <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
@@ -113,7 +84,7 @@ const AdminDashboard = () => {
             <h2 className="text-lg font-bold text-slate-900">Claims Overview</h2>
             <div className="flex gap-2">
               {['7D', '30D', '6M', '1Y'].map(f => (
-                <button key={f} className={`px-3 py-1 text-xs font-medium rounded-md ${f==='6M' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                <button key={f} onClick={()=>setDays(({'7D':7,'30D':30,'6M':180,'1Y':365})[f])} className={`px-3 py-1 text-xs font-medium rounded-md ${days===({'7D':7,'30D':30,'6M':180,'1Y':365})[f] ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                   {f}
                 </button>
               ))}
@@ -138,7 +109,7 @@ const AdminDashboard = () => {
 
       {/* Charts Row 2 & Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Policy Distribution */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-6">Policy Distribution</h2>
@@ -163,7 +134,7 @@ const AdminDashboard = () => {
                 </PieChart>
              </ResponsiveContainer>
              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-bold text-slate-900">9,842</span>
+                <span className="text-3xl font-bold text-slate-900">{stats.activePolicies}</span>
                 <span className="text-xs text-slate-500 uppercase tracking-wider">Total Policies</span>
              </div>
           </div>
@@ -173,7 +144,7 @@ const AdminDashboard = () => {
                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
                  <div className="flex-1 flex justify-between text-sm">
                    <span className="text-slate-600">{item.name}</span>
-                   <span className="font-semibold text-slate-900">{item.value}%</span>
+                   <span className="font-semibold text-slate-900">{item.value}</span>
                  </div>
                </div>
             ))}

@@ -1,3 +1,5 @@
+import { money } from '../utils/api';
+import { showToast } from '../utils/toast';
 import { readCollection } from '../utils/storage';
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,12 +14,20 @@ const Dashboard = () => {
   const [payments, setPayments] = useState([]);
 
   useEffect(() => {
-    const storedPolicies = readCollection('ipp_policies');
-    setPolicies(storedPolicies);
-    const storedClaims = readCollection('ipp_claims');
-    setClaims(storedClaims);
-    const storedPayments = readCollection('ipp_payments');
-    setPayments(storedPayments);
+    let active = true;
+    (async () => {
+      try {
+
+    const storedPolicies = await readCollection('ipp_policies');
+    if (active) setPolicies(storedPolicies);
+    const storedClaims = await readCollection('ipp_claims');
+    if (active) setClaims(storedClaims);
+    const storedPayments = await readCollection('ipp_payments');
+    if (active) setPayments(storedPayments);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
   return (
@@ -32,9 +42,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Active Policies', value: policies.filter(p => p.status === 'Active').length.toString(), icon: Shield, color: 'text-primary', bg: 'bg-blue-50' },
-          { label: 'Open Claims', value: claims.filter(c => c.status !== 'Completed').length.toString(), icon: AlertCircle, color: 'text-accent', bg: 'bg-yellow-50' },
-          { label: 'Next Payment', value: '$250', icon: CreditCard, color: 'text-success', bg: 'bg-green-50' },
-          { label: 'Total Coverage', value: '$850K', icon: FileText, color: 'text-secondary', bg: 'bg-teal-50' },
+          { label: 'Open Claims', value: claims.filter(c => !['Approved','Rejected','Paid'].includes(c.status)).length.toString(), icon: AlertCircle, color: 'text-accent', bg: 'bg-yellow-50' },
+          { label: 'Pending Premiums', value: money(policies.filter(p=>p.status==='Pending Payment').reduce((sum,p)=>sum+p.premiumAmount,0)), icon: CreditCard, color: 'text-success', bg: 'bg-green-50' },
+          { label: 'Total Coverage', value: money(policies.filter(p=>p.status==='Active').reduce((sum,p)=>sum+p.coverageAmount,0)), icon: FileText, color: 'text-secondary', bg: 'bg-teal-50' },
         ].map((stat, idx) => (
           <div key={idx} className="bg-white p-5 rounded-xl border border-borderMain shadow-sm flex items-center gap-4">
             <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.bg} ${stat.color}`}>
@@ -49,10 +59,10 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Column: Policies & Actions */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Quick Actions */}
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
             <h2 className="text-lg font-bold text-textMain mb-4">Quick Actions</h2>
@@ -108,8 +118,8 @@ const Dashboard = () => {
                     <button onClick={() => navigate(`/policies/${policy.id}`)} className="flex-1 px-4 py-2 border border-borderMain rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
                       View Details
                     </button>
-                    <button 
-                      onClick={() => navigate(`/policies/${policy.id}?renew=true`)} 
+                    <button
+                      onClick={() => navigate(`/policies/${policy.id}?renew=true`)}
                       className="flex-1 px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary-dark transition-colors"
                     >
                       Renew Policy
@@ -124,7 +134,7 @@ const Dashboard = () => {
 
         {/* Right Column: Claim Status & Activity */}
         <div className="space-y-6">
-          
+
           {/* Claim Status */}
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
              <div className="flex justify-between items-center mb-4">
@@ -142,7 +152,7 @@ const Dashboard = () => {
                   </div>
                   <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">{claims[0].status}</span>
                 </div>
-                
+
                 {/* Progress Indicator */}
                 <div className="mt-4 relative">
                   <div className="absolute top-2 left-2 right-2 h-0.5 bg-gray-200"></div>
@@ -181,11 +191,7 @@ const Dashboard = () => {
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
             <h2 className="text-lg font-bold text-textMain mb-4">Recent Activity</h2>
             <div className="space-y-4">
-              {[
-                { type: 'payment', title: 'Premium payment completed', desc: 'Business Property Insurance', time: '2 days ago', icon: CreditCard, color: 'text-success bg-green-100' },
-                { type: 'claim', title: 'Claim submitted', desc: 'CLM-2026-0045 (Property Damage)', time: '1 week ago', icon: AlertCircle, color: 'text-accent bg-yellow-100' },
-                { type: 'policy', title: 'Business policy renewed', desc: 'Employee Protection Plan', time: '1 month ago', icon: FileText, color: 'text-primary bg-blue-100' },
-              ].map((activity, idx) => (
+              {[...payments.map(p=>({title:'Payment '+p.status,desc:p.id,time:p.date,icon:CreditCard,color:'text-success bg-green-100'})),...claims.map(c=>({title:'Claim '+c.status,desc:c.id,time:c.submittedDate,icon:AlertCircle,color:'text-accent bg-yellow-100'})),...policies.map(p=>({title:p.name,desc:p.status,time:p.createdAt,icon:FileText,color:'text-primary bg-blue-100'}))].sort((a,b)=>b.time.localeCompare(a.time)).slice(0,5).map((activity, idx) => (
                 <div key={idx} className="flex gap-3">
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${activity.color}`}>
                     <activity.icon className="h-4 w-4" />

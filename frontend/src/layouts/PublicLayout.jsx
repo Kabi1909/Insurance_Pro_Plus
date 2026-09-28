@@ -1,9 +1,11 @@
+import PublicSearch from '../components/PublicSearch';
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Shield, Menu, X, Search, ChevronDown } from 'lucide-react';
 
 const PublicLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchOpen,setSearchOpen]=useState(false);
   const location = useLocation();
 
   const isActive = (path) => {
@@ -13,6 +15,7 @@ const PublicLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FBFF] text-[#081A3A] font-sans">
+      {searchOpen&&<PublicSearch onClose={()=>setSearchOpen(false)}/>}
       {/* Navbar */}
       <header className="bg-white border-b border-[#E4ECF7] sticky top-0 z-50 h-[75px] flex items-center">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-8">
@@ -31,7 +34,7 @@ const PublicLayout = () => {
                 </div>
               </Link>
             </div>
-            
+
             {/* Desktop Navigation (Center) */}
             <nav className="hidden lg:flex items-center space-x-8">
               <Link to="/" className={`text-[15px] font-semibold transition-colors relative py-2 ${isActive('/') ? 'text-[#0866FF]' : 'text-[#52627A] hover:text-[#0866FF]'}`}>
@@ -50,7 +53,7 @@ const PublicLayout = () => {
 
             {/* Right Navigation */}
             <div className="hidden md:flex items-center space-x-5">
-              <button className="text-[#081A3A] hover:text-[#0866FF] transition-colors p-2">
+              <button aria-label="Search insurance" onClick={()=>setSearchOpen(true)} className="text-[#081A3A] hover:text-[#0866FF] transition-colors p-2">
                 <Search className="h-5 w-5" />
               </button>
               {location.pathname === '/login' ? (
@@ -79,7 +82,7 @@ const PublicLayout = () => {
 
             {/* Mobile menu button */}
             <div className="flex items-center lg:hidden gap-4">
-              <button className="text-[#081A3A] md:hidden">
+              <button aria-label="Search insurance" onClick={()=>setSearchOpen(true)} className="text-[#081A3A] md:hidden">
                 <Search className="h-5 w-5" />
               </button>
               <button
@@ -97,11 +100,11 @@ const PublicLayout = () => {
           <div className="absolute top-[75px] left-0 right-0 bg-white border-b border-[#E4ECF7] lg:hidden shadow-lg">
             <div className="px-4 pt-2 pb-6 space-y-2 max-h-[80vh] overflow-y-auto">
               <Link to="/" className="block px-3 py-3 rounded-md text-base font-semibold text-[#0866FF] bg-[#EAF4FF]" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-              <div className="px-3 py-3 rounded-md text-base font-semibold text-[#081A3A] flex justify-between">Insurance <ChevronDown className="h-5 w-5 text-[#52627A]"/></div>
+              <Link to="/products" onClick={()=>setIsMobileMenuOpen(false)} className="px-3 py-3 rounded-md text-base font-semibold text-[#081A3A] flex justify-between">Insurance <ChevronDown className="h-5 w-5 text-[#52627A]"/></Link>
               <Link to="/public-claims" className="block px-3 py-3 rounded-md text-base font-semibold text-[#081A3A]" onClick={() => setIsMobileMenuOpen(false)}>Claims</Link>
-              <div className="px-3 py-3 rounded-md text-base font-semibold text-[#081A3A] flex justify-between">Resources <ChevronDown className="h-5 w-5 text-[#52627A]"/></div>
+              <Link to="/faq" onClick={()=>setIsMobileMenuOpen(false)} className="px-3 py-3 rounded-md text-base font-semibold text-[#081A3A] flex justify-between">Resources <ChevronDown className="h-5 w-5 text-[#52627A]"/></Link>
               <Link to="/about" className="block px-3 py-3 rounded-md text-base font-semibold text-[#081A3A]" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
-              
+
               <div className="mt-6 pt-6 border-t border-[#E4ECF7] flex flex-col space-y-3">
                 <Link
                   to="/login"

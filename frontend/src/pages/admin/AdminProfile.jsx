@@ -1,3 +1,4 @@
+import PasswordDialog from '../../components/PasswordDialog';
 import React, { useContext, useState } from 'react';
 import { AdminAuthContext } from '../../context/AdminAuthContext';
 import { User, Mail, Briefcase, Phone, Lock, Edit, CheckCircle } from 'lucide-react';
@@ -5,16 +6,17 @@ import Modal from '../../components/admin/Modal';
 import { showToast } from '../../utils/toast';
 
 const AdminProfile = () => {
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const { admin, updateProfile } = useContext(AdminAuthContext);
   const [showEdit, setShowEdit] = useState(false);
 
-  const handleEditProfile = (e) => {
+  const handleEditProfile = async (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const name = data.get('name').trim();
     if (!name) return showToast('Full name is required.', 'error');
     try {
-      updateProfile({ name, phone: data.get('phone').trim() });
+      await updateProfile({ name, phone: data.get('phone').trim() });
       setShowEdit(false);
       showToast('Profile updated successfully.');
     } catch (error) { showToast(error.message, 'error'); }
@@ -24,13 +26,14 @@ const AdminProfile = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {passwordOpen && <PasswordDialog onClose={() => setPasswordOpen(false)} />}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-2">My Profile</h1>
         <p className="text-slate-500">Manage your administration account details and security.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Profile Summary Card */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
           <div className="h-24 w-24 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-3xl mx-auto mb-4 shadow-inner">
@@ -46,7 +49,7 @@ const AdminProfile = () => {
             <button onClick={() => setShowEdit(true)} className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium">
               <Edit className="h-4 w-4" /> Edit Profile
             </button>
-            <button onClick={() => showToast("Password changes are unavailable in this demo.", "warning")} className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
+            <button onClick={() => setPasswordOpen(true)} className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm">
               <Lock className="h-4 w-4" /> Change Password
             </button>
           </div>
@@ -73,7 +76,7 @@ const AdminProfile = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1 flex items-center gap-2"><Phone className="h-4 w-4" /> Phone</p>
-                <p className="font-semibold text-slate-900">{admin.phone || "+94 77 000 0000"}</p>
+                <p className="font-semibold text-slate-900">{admin.phone || ''}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1 flex items-center gap-2"><Briefcase className="h-4 w-4" /> Role</p>
@@ -93,19 +96,19 @@ const AdminProfile = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Account Created</p>
-                <p className="font-semibold text-slate-900">Jan 01, 2020</p>
+                <p className="font-semibold text-slate-900">{new Date(admin.createdAt).toLocaleDateString()}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Last Login</p>
-                <p className="font-semibold text-slate-900">Just now</p>
+                <p className="font-semibold text-slate-900">{admin.lastLogin?new Date(admin.lastLogin).toLocaleString():'Never'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Last Password Change</p>
-                <p className="font-semibold text-slate-900">3 months ago</p>
+                <p className="font-semibold text-slate-900">{admin.passwordChangedAt?new Date(admin.passwordChangedAt).toLocaleString():'Not changed'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-500 mb-1">Two-Factor Authentication</p>
-                <p className="font-semibold text-green-600 flex items-center gap-1">Unavailable in demo</p>
+                <p className="font-semibold text-green-600 flex items-center gap-1">Not configured</p>
               </div>
             </div>
           </div>
@@ -121,7 +124,7 @@ const AdminProfile = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input type="text" name="phone" defaultValue={admin.phone || "+94 77 000 0000"} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <input type="text" name="phone" defaultValue={admin.phone || ''} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
             </div>
             <div className="pt-4 flex justify-end gap-3">
                <button type="button" onClick={() => setShowEdit(false)} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Cancel</button>

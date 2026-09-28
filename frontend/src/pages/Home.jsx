@@ -10,7 +10,7 @@ const Home = () => {
         {/* Subtle background abstract shape */}
         <div className="absolute top-0 right-0 w-[60%] h-full bg-[#EAF4FF] rounded-l-[100px] opacity-50 blur-3xl -z-10 hidden lg:block"></div>
         <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[120%] bg-[#0866FF]/5 rounded-full blur-3xl -z-10 hidden lg:block"></div>
-        
+
         {/* Abstract oversized shield outline behind family */}
         <div className="absolute top-1/2 right-[10%] -translate-y-1/2 -z-10 opacity-[0.03] pointer-events-none hidden lg:block">
            <Shield className="w-[500px] h-[500px]" strokeWidth={0.5} />
@@ -41,9 +41,9 @@ const Home = () => {
               <Link to="/register" className="w-full sm:w-[215px] h-[54px] flex items-center justify-center gap-2 bg-[#0866FF] hover:bg-[#0753d4] text-white font-semibold rounded-lg transition-colors shadow-[0_4px_14px_rgba(8,102,255,0.3)] text-[16px]">
                 Get Started <ArrowRight className="w-4 h-4" />
               </Link>
-              <button className="w-full sm:w-[215px] h-[54px] flex items-center justify-center border border-[#0866FF] text-[#0866FF] bg-white hover:bg-[#EAF4FF] font-semibold rounded-lg transition-colors text-[16px]">
+              <Link to="/about" className="w-full sm:w-[215px] h-[54px] flex items-center justify-center border border-[#0866FF] text-[#0866FF] bg-white hover:bg-[#EAF4FF] font-semibold rounded-lg transition-colors text-[16px]">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -51,15 +51,15 @@ const Home = () => {
           <div className="w-full lg:w-[52%] relative flex justify-center mt-10 lg:mt-0 z-10 px-4 sm:px-10 lg:px-0">
             {/* Image mask container */}
             <div className="relative w-full max-w-[650px] aspect-[4/3] lg:aspect-[4/3]">
-               {/* Masking the image so the bottom/edges softly blend into background. 
+               {/* Masking the image so the bottom/edges softly blend into background.
                    Using a gentle vignette radial gradient via Tailwind arbitrary mask. */}
                <div className="absolute inset-0 rounded-[32px] overflow-hidden shadow-xl border border-white/50" style={{ maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)' }}>
                  <img src="/images/happy-family.jpg" alt="Happy family using laptop" className="w-full h-full object-cover object-center" />
                </div>
-               
+
                {/* To satisfy "Do NOT put the image inside a rectangular card. Avoid obvious hard image edges"
-                   The mask above will softly fade the edges. But just in case mask isn't supported, 
-                   it's rounded. 
+                   The mask above will softly fade the edges. But just in case mask isn't supported,
+                   it's rounded.
                */}
             </div>
 
@@ -101,7 +101,7 @@ const Home = () => {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Grid setup based on screen size */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-[#E4ECF7] lg:min-h-[115px]">
-            
+
             <div className="flex items-center gap-4 py-6 px-2 lg:px-8 justify-center sm:justify-start lg:justify-center xl:justify-start">
               <div className="w-[50px] h-[50px] rounded-full bg-[#EAF4FF] flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-6 h-6 text-[#0866FF]" />

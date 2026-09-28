@@ -1,3 +1,6 @@
+import MessageThread from '../../components/MessageThread';
+import { api, money } from '../../utils/api';
+import RecordDocuments from '../../components/RecordDocuments';
 import MissingRecord from '../../components/MissingRecord';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect, useContext } from 'react';
@@ -13,27 +16,37 @@ const AdminClaimDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { admin } = useContext(AdminAuthContext);
-  
+
+  const [recordLoading,setRecordLoading]=useState(true);
   const [claim, setClaim] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState(''); // 'approve' | 'reject'
-  
+
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState('');
-  
-  const [notes, setNotes] = useState([
-    { id: 1, text: "Customer submitted accident photos. Damage appears significant on front left bumper.", author: "System", time: "Sep 25, 2026 10:45 AM" },
-    { id: 2, text: "Awaiting police report verification.", author: "A. Fernando", time: "Sep 25, 2026 14:20 PM" }
-  ]);
+
+  const [notes, setNotes] = useState([]);
+  const [officers, setOfficers] = useState([]);
   const [newNote, setNewNote] = useState('');
 
   useEffect(() => {
-    const claims = readCollection('ipp_admin_claims');
+    let active = true;setRecordLoading(true);
+    (async () => {
+      try {
+
+    const claims = await readCollection('ipp_admin_claims');
     const found = claims.find(c => c.id === id);
-    setClaim(found || null);
+    if (active) { setClaim(found || null); setNotes(found?.notes || []); }
+    const staff = await api("/admin/staff");
+    if (active) setOfficers(staff.filter(s => s.status === "Active"));
+
+      } catch (error) { if (active) showToast(error.message, 'error'); } finally { if(active)setRecordLoading(false); }
+    })();
+    return () => { active = false; };
   }, [id]);
 
+  if(recordLoading)return <p className="p-6 text-slate-500">Loading record…</p>;
   if (!claim) return <MissingRecord label="Claim" backTo="/admin/claims" />;
 
   const handleAction = (type) => {
@@ -41,57 +54,14 @@ const AdminClaimDetails = () => {
     setShowConfirm(true);
   };
 
-  const confirmAction = () => {
-    const claims = readCollection('ipp_admin_claims');
-    const updated = claims.map(c => c.id === id ? { ...c, status: actionType === 'approve' ? 'Approved' : 'Rejected' } : c);
-    localStorage.setItem('ipp_admin_claims', JSON.stringify(updated));
-    setClaim({ ...claim, status: actionType === 'approve' ? 'Approved' : 'Rejected' });
-    setShowConfirm(false);
-    showToast(`Claim successfully ${actionType}d.`, actionType === 'approve' ? 'success' : 'error');
+  const updateClaim = async fields => {
+    const updated = await api('/admin/claims/'+id, {method:'PATCH', body:fields});
+    setClaim(updated); setNotes(updated.notes || []); return updated;
   };
-
-  const handleAssign = (e) => {
-    e.preventDefault();
-    const claims = readCollection('ipp_admin_claims');
-    const updated = claims.map(c => c.id === id ? { ...c, officer: selectedOfficer } : c);
-    localStorage.setItem('ipp_admin_claims', JSON.stringify(updated));
-    setClaim({ ...claim, officer: selectedOfficer });
-    setShowAssignModal(false);
-    showToast(`Claim assigned to ${selectedOfficer}.`, 'success');
-  };
-
-  const handleRequestInfo = (e) => {
-    e.preventDefault();
-    const claims = readCollection('ipp_admin_claims');
-    const updated = claims.map(c => c.id === id ? { ...c, status: 'Additional Information Required' } : c);
-    localStorage.setItem('ipp_admin_claims', JSON.stringify(updated));
-    setClaim({ ...claim, status: 'Additional Information Required' });
-    
-    // Add an automatic note
-    const autoNote = {
-      id: Date.now(),
-      text: "Requested additional information from customer.",
-      author: admin?.name || "System",
-      time: new Date().toLocaleString()
-    };
-    setNotes([autoNote, ...notes]);
-    
-    setShowRequestModal(false);
-    showToast('Information request sent to customer.', 'success');
-  };
-
-  const handleAddNote = () => {
-    if (!newNote.trim()) return;
-    const note = {
-      id: Date.now(),
-      text: newNote,
-      author: admin?.name || "Admin",
-      time: new Date().toLocaleString()
-    };
-    setNotes([note, ...notes]);
-    setNewNote('');
-    showToast('Internal note added.', 'success');
-  };
+  const confirmAction = async () => { try { await updateClaim({status:actionType==='approve'?'Approved':'Rejected'});setShowConfirm(false);showToast('Claim decision saved.'); } catch(error){showToast(error.message,'error');} };
+  const handleAssign = async e => { e.preventDefault();try{await updateClaim({officerId:selectedOfficer});setShowAssignModal(false);showToast('Officer assigned.');}catch(error){showToast(error.message,'error');} };
+  const handleRequestInfo = async e => {e.preventDefault();const message=new FormData(e.currentTarget).get('message');try{await updateClaim({status:'Additional Information Required',message});setShowRequestModal(false);showToast('Information request saved for the customer.');}catch(error){showToast(error.message,'error');}};
+  const handleAddNote = async () => {if(!newNote.trim())return;try{await updateClaim({note:newNote});setNewNote('');showToast('Internal note saved.');}catch(error){showToast(error.message,'error');}};
 
   return (
     <div className="space-y-6 pb-20">
@@ -113,16 +83,16 @@ const AdminClaimDetails = () => {
            <button onClick={() => setShowRequestModal(true)} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
              Request Info
            </button>
-           <button 
+           <button
              onClick={() => handleAction('approve')}
-             disabled={['Approved', 'Paid'].includes(claim.status)}
+             disabled={['Approved', 'Rejected', 'Paid'].includes(claim.status)}
              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium shadow-sm disabled:opacity-50"
            >
              Approve Claim
            </button>
-           <button 
+           <button
              onClick={() => handleAction('reject')}
-             disabled={['Rejected', 'Paid'].includes(claim.status)}
+             disabled={['Approved', 'Rejected', 'Paid'].includes(claim.status)}
              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm disabled:opacity-50"
            >
              Reject Claim
@@ -138,16 +108,16 @@ const AdminClaimDetails = () => {
              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Claim Amount</p>
-                  <p className="text-2xl font-bold text-slate-900">LKR {claim.amount.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-slate-900">{money(claim.amount)}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-slate-500 mb-1">Incident Date</p>
-                  <p className="text-slate-900 font-medium">Sep 24, 2026</p>
+                  <p className="text-slate-900 font-medium">{claim.date}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-sm font-medium text-slate-500 mb-1">Description of Incident</p>
                   <p className="text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    Vehicle collided with a stationary object while reversing. Front left bumper and headlight assembly severely damaged. No injuries reported.
+                    {claim.description}
                   </p>
                 </div>
              </div>
@@ -158,9 +128,9 @@ const AdminClaimDetails = () => {
                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><User className="h-5 w-5 text-blue-600" /> Customer Information</h2>
                <div className="space-y-3">
                  <div className="flex justify-between"><span className="text-slate-500 text-sm">Name</span><span className="font-medium text-slate-900">{claim.customer}</span></div>
-                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Customer ID</span><span className="font-medium text-blue-600">CUS-10291</span></div>
-                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Phone</span><span className="font-medium text-slate-900">+94 77 123 4567</span></div>
-                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Email</span><span className="font-medium text-slate-900">nimal@example.com</span></div>
+                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Customer ID</span><span className="font-medium text-blue-600">{claim.owner}</span></div>
+                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Phone</span><span className="font-medium text-slate-900">{claim.phone || "Not provided"}</span></div>
+                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Email</span><span className="font-medium text-slate-900">{claim.email || "Not provided"}</span></div>
                </div>
              </div>
 
@@ -169,24 +139,15 @@ const AdminClaimDetails = () => {
                <div className="space-y-3">
                  <div className="flex justify-between"><span className="text-slate-500 text-sm">Policy Number</span><span className="font-medium text-blue-600">{claim.policy}</span></div>
                  <div className="flex justify-between"><span className="text-slate-500 text-sm">Type</span><span className="font-medium text-slate-900">{claim.type} Insurance</span></div>
-                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Coverage</span><span className="font-medium text-slate-900">LKR 5,000,000</span></div>
-                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Status</span><span className="font-medium text-green-600">Active</span></div>
+                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Coverage</span><span className="font-medium text-slate-900">{money(claim.coverage)}</span></div>
+                 <div className="flex justify-between"><span className="text-slate-500 text-sm">Status</span><span className="font-medium text-green-600">{claim.policyStatus}</span></div>
                </div>
              </div>
            </div>
 
            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Paperclip className="h-5 w-5 text-blue-600" /> Supporting Documents</h2>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:border-blue-400 cursor-pointer transition-colors group">
-                   <div className="bg-red-100 p-2 rounded-lg text-red-600"><FileText className="h-5 w-5" /></div>
-                   <div className="flex-1 overflow-hidden"><p className="text-sm font-semibold text-slate-900 truncate">Accident_Photos.zip</p><p className="text-xs text-slate-500">4.2 MB • Sep 25</p></div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:border-blue-400 cursor-pointer transition-colors group">
-                   <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><FileText className="h-5 w-5" /></div>
-                   <div className="flex-1 overflow-hidden"><p className="text-sm font-semibold text-slate-900 truncate">Police_Report_Copy.pdf</p><p className="text-xs text-slate-500">1.1 MB • Sep 25</p></div>
-                </div>
-             </div>
+             <RecordDocuments related={id} admin /><h3 className="font-bold mt-6 mb-3">Customer messages</h3><MessageThread kind="claims" record={claim} onUpdate={setClaim}/>
            </div>
         </div>
 
@@ -230,9 +191,9 @@ const AdminClaimDetails = () => {
               ))}
             </div>
             <div className="mt-4 pt-4 border-t border-slate-100">
-               <textarea 
-                 className="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-blue-500 resize-none" 
-                 placeholder="Type a note here..." 
+               <textarea
+                 className="w-full border border-slate-200 rounded-lg p-3 text-sm outline-none focus:border-blue-500 resize-none"
+                 placeholder="Type a note here..."
                  rows="3"
                  value={newNote}
                  onChange={(e) => setNewNote(e.target.value)}
@@ -245,12 +206,12 @@ const AdminClaimDetails = () => {
         </div>
       </div>
 
-      <ConfirmDialog 
-        isOpen={showConfirm} 
+      <ConfirmDialog
+        isOpen={showConfirm}
         title={actionType === 'approve' ? "Approve Claim?" : "Reject Claim?"}
         message={actionType === 'approve' ? "Are you sure you want to approve this claim? Financial processing will be initiated." : "Are you sure you want to reject this claim? The customer will be notified."}
-        onConfirm={confirmAction} 
-        onCancel={() => setShowConfirm(false)} 
+        onConfirm={confirmAction}
+        onCancel={() => setShowConfirm(false)}
         confirmText={actionType === 'approve' ? "Approve" : "Reject"}
         type={actionType === 'approve' ? "success" : "danger"}
       />
@@ -261,9 +222,7 @@ const AdminClaimDetails = () => {
              <label className="block text-sm font-medium text-slate-700 mb-1">Select Officer</label>
              <select required className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 bg-white" value={selectedOfficer} onChange={(e) => setSelectedOfficer(e.target.value)}>
                <option value="" disabled>Select an officer...</option>
-               <option value="A. Fernando">A. Fernando (12 active claims)</option>
-               <option value="M. Perera">M. Perera (8 active claims)</option>
-               <option value="S. Bandara">S. Bandara (3 active claims)</option>
+               {officers.map(officer => <option key={officer.id} value={officer.id}>{officer.name}</option>)}
              </select>
            </div>
            <div className="pt-4 flex justify-end gap-3">
@@ -288,7 +247,7 @@ const AdminClaimDetails = () => {
            </div>
            <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Message to Customer</label>
-             <textarea required rows="4" className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 resize-none" placeholder="Please provide clear photos of the incident..."></textarea>
+             <textarea name="message" required rows="4" className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 resize-none" placeholder="Please provide clear photos of the incident..."></textarea>
            </div>
            <div>
              <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>

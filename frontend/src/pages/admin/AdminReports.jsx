@@ -1,53 +1,19 @@
+import { useAnalytics } from '../../utils/useAnalytics';
+import { money, download } from '../../utils/api';
+import { useState } from 'react';
 import React from 'react';
 import { CheckCircle, Calendar, Download, DollarSign, AlertCircle, FileText, Users, Activity } from 'lucide-react';
 import StatCard from '../../components/admin/StatCard';
 import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, LineChart, Line } from 'recharts';
 import { showToast } from '../../utils/toast';
 
-const revenueData = [
-  { name: 'Jan', revenue: 18.2 }, { name: 'Feb', revenue: 19.5 }, { name: 'Mar', revenue: 21.0 },
-  { name: 'Apr', revenue: 20.2 }, { name: 'May', revenue: 22.5 }, { name: 'Jun', revenue: 23.1 },
-  { name: 'Jul', revenue: 22.8 }, { name: 'Aug', revenue: 24.2 }, { name: 'Sep', revenue: 24.8 },
-];
-
-const claimsData = [
-  { name: 'Jan', submitted: 120, approved: 95, rejected: 15 },
-  { name: 'Feb', submitted: 132, approved: 105, rejected: 18 },
-  { name: 'Mar', submitted: 145, approved: 110, rejected: 25 },
-  { name: 'Apr', submitted: 125, approved: 98, rejected: 20 },
-  { name: 'May', submitted: 150, approved: 120, rejected: 22 },
-  { name: 'Jun', submitted: 165, approved: 135, rejected: 20 },
-];
-
-const policyDistribution = [
-  { name: 'Motor', value: 38, color: '#2563EB' }, { name: 'Health', value: 26, color: '#0F766E' },
-  { name: 'Life', value: 18, color: '#F59E0B' }, { name: 'Home', value: 11, color: '#8B5CF6' },
-  { name: 'Business', value: 7, color: '#64748B' },
-];
-
-const paymentStatus = [
-  { name: 'Paid', value: 82, color: '#16A34A' },
-  { name: 'Pending', value: 12, color: '#F59E0B' },
-  { name: 'Failed', value: 4, color: '#DC2626' },
-  { name: 'Overdue', value: 2, color: '#64748B' },
-];
-
-const customerGrowth = [
-  { name: 'Jan', newCustomers: 120 }, { name: 'Feb', newCustomers: 145 }, { name: 'Mar', newCustomers: 210 },
-  { name: 'Apr', newCustomers: 180 }, { name: 'May', newCustomers: 250 }, { name: 'Jun', newCustomers: 310 },
-  { name: 'Jul', newCustomers: 290 }, { name: 'Aug', newCustomers: 380 }, { name: 'Sep', newCustomers: 428 },
-];
-
-const claimsByType = [
-  { name: 'Motor', amount: 154 }, { name: 'Health', amount: 120 }, { name: 'Life', amount: 45 },
-  { name: 'Home', amount: 32 }, { name: 'Business', amount: 35 },
-];
-
 const AdminReports = () => {
+  const [days, setDays] = useState(30);
+  const [type, setType] = useState('');
+  const stats=useAnalytics(days,type);
+  const { revenueData, claimsData, policyDistribution, recentClaims, paymentStatus, customerGrowth, claimsByType }=stats;
 
-  const handleExport = (type) => {
-    showToast(`Report prepared successfully. Exporting as ${type}...`, 'success');
-  };
+  const handleExport = (format) => download('/admin/export?kind=payments&format='+format.toLowerCase()+'&days='+days+'&type='+encodeURIComponent(type));
 
   return (
     <div className="space-y-6">
@@ -57,23 +23,23 @@ const AdminReports = () => {
           <p className="text-slate-500 text-sm">Analyze insurance performance, financial activity and operational trends.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <select className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium">
+           <select value={type} onChange={e=>setType(e.target.value)} className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium">
              <option>All Insurance Types</option>
-             <option>Motor</option>
-             <option>Health</option>
-             <option>Life</option>
-             <option>Home</option>
+             <option value="motor">Motor</option>
+             <option value="health">Health</option>
+             <option value="life">Life</option>
+             <option value="home">Home</option>
              <option>Business</option>
            </select>
-           <select className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium">
-             <option>Last 30 Days</option>
-             <option>Last 7 Days</option>
-             <option>Last 6 Months</option>
-             <option>This Year</option>
-             <option>Custom Range</option>
+           <select value={days} onChange={e=>setDays(Number(e.target.value))} className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium">
+             <option value="30">Last 30 Days</option>
+             <option value="7">Last 7 Days</option>
+             <option value="180">Last 6 Months</option>
+             <option value="365">Last Year</option>
+
            </select>
            <div className="relative group">
-             <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm">
+             <button onClick={()=>handleExport('CSV')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm">
                <Download className="h-4 w-4" /> Export Report
              </button>
              <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 py-1">
@@ -86,16 +52,16 @@ const AdminReports = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Total Premium" value="LKR 24.8M" icon={DollarSign} trend="+12.5%" color="blue" />
-        <StatCard title="Claims Submitted" value="386" icon={AlertCircle} trend="+8.4%" color="slate" />
-        <StatCard title="Claims Paid" value="LKR 8.4M" icon={Activity} color="red" />
-        <StatCard title="Active Policies" value="9,842" icon={FileText} trend="+5.4%" color="green" />
-        <StatCard title="New Customers" value="428" icon={Users} trend="+15%" color="blue" />
-        <StatCard title="Approval Rate" value="78.5%" icon={CheckCircle} color="green" />
+        <StatCard title="Total Premium" value={money(stats.premium)} icon={DollarSign} color="blue" />
+        <StatCard title="Claims Submitted" value={stats.claimsCount} icon={AlertCircle} color="slate" />
+        <StatCard title="Claims Paid" value={money(stats.claimsPaid)} icon={Activity} color="red" />
+        <StatCard title="Active Policies" value={stats.activePolicies} icon={FileText} color="green" />
+        <StatCard title="New Customers" value={stats.newCustomers} icon={Users} color="blue" />
+        <StatCard title="Approval Rate" value={stats.approvalRate + '%'} icon={CheckCircle} color="green" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Revenue Trend */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-6">Premium Revenue Trend</h2>
@@ -110,7 +76,7 @@ const AdminReports = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} tickFormatter={(value) => `${value}M`} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} tickFormatter={(value) => money(value)} />
                 <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
                 <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue2)" />
               </AreaChart>
@@ -175,7 +141,7 @@ const AdminReports = () => {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
                     <span className="text-slate-600">{item.name}</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{item.value}%</span>
+                  <span className="font-semibold text-slate-900">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -201,7 +167,7 @@ const AdminReports = () => {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
                     <span className="text-slate-600">{item.name}</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{item.value}%</span>
+                  <span className="font-semibold text-slate-900">{item.value}</span>
                 </div>
               ))}
             </div>

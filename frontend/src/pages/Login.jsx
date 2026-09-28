@@ -1,16 +1,13 @@
 import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Mail, Lock, FileText, CreditCard, Headphones, BarChart3, Quote, ShieldCheck, ArrowRight } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
-import { AdminAuthContext } from '../context/AdminAuthContext';
-import { ADMIN_EMAIL, normalizeEmail, isCustomerCredentials } from '../utils/credentials';
-import { getDemoUser } from '../utils/demoData';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
-  const { login: loginAdmin } = useContext(AdminAuthContext);
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -24,27 +21,22 @@ const Login = () => {
     const newErrors = {};
     if (!formData.email) newErrors.email = "Email address is required.";
     else if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) newErrors.email = "Please enter a valid email address.";
-    
+
     if (!formData.password) newErrors.password = "Password is required.";
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     setErrors({});
     try {
-      if (normalizeEmail(formData.email) === ADMIN_EMAIL) {
-        await loginAdmin(formData.email, formData.password, remember);
-        navigate('/admin/dashboard', { replace: true });
-      } else if (isCustomerCredentials(formData.email, formData.password)) {
-        login(getDemoUser(), remember);
-        navigate('/dashboard', { replace: true });
-      } else {
-        setErrors({ general: 'Email or password is incorrect.' });
-      }
+      const account = await login(formData.email, formData.password, remember);
+      const requested = new URLSearchParams(location.search).get('next');
+      const destination = requested?.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\') ? requested : '/dashboard';
+      navigate(account.kind === 'admin' ? '/admin/dashboard' : destination, { replace: true });
     } catch (error) {
       setErrors({ general: error.message });
     } finally {
@@ -54,10 +46,10 @@ const Login = () => {
 
   return (
     <div className="w-full min-h-[calc(100vh-75px)] flex flex-col lg:flex-row bg-[#F5FAFF] font-sans">
-      
+
       {/* LEFT SECTION (54%) */}
       <div className="hidden lg:flex w-[54%] bg-[#EAF5FF] relative overflow-hidden flex-col pt-12 pl-12 xl:pl-20">
-        
+
         {/* Headings */}
         <div className="relative z-10 max-w-[500px]">
           <h1 className="text-[50px] xl:text-[56px] font-[800] leading-[1.1] text-[#071A3D] mb-4 tracking-tight">
@@ -67,7 +59,7 @@ const Login = () => {
           <p className="text-[18px] xl:text-[20px] text-[#2c3b59] leading-relaxed mb-10">
             Log in to manage your policies, submit claims, make payments and access all your insurance services in one secure place.
           </p>
-          
+
           {/* Features Vertical List */}
           <div className="space-y-6">
             <div className="flex items-start gap-4">
@@ -79,7 +71,7 @@ const Login = () => {
                 <p className="text-[#52627A] text-[15px]">View, renew or cancel anytime</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-4">
               <div className="w-[48px] h-[48px] rounded-full bg-[#DCFCE7] flex items-center justify-center shrink-0">
                 <FileText className="w-6 h-6 text-[#0EAD72]" />
@@ -116,7 +108,7 @@ const Login = () => {
         <div className="absolute bottom-0 right-0 w-[75%] max-w-[650px] h-[85%] z-0">
            {/* The image itself */}
            <img src="/images/businessman.jpg" alt="Businessman" className="w-full h-full object-cover object-left-top rounded-tl-[80px]" />
-           
+
            {/* Gradient overlay to fade the image into the background on the left and top */}
            <div className="absolute inset-0 bg-gradient-to-r from-[#EAF5FF] via-[#EAF5FF]/80 to-transparent w-[50%]"></div>
            <div className="absolute inset-0 bg-gradient-to-b from-[#EAF5FF] via-[#EAF5FF]/40 to-transparent h-[30%]"></div>
@@ -143,7 +135,7 @@ const Login = () => {
              <h4 className="font-bold text-[#071A3D] text-[15px] leading-tight mb-1">Your Protection<br/>Our Priority</h4>
              <p className="text-[#52627A] text-[12px] leading-tight">Manage your insurance anytime, anywhere.</p>
            </div>
-           
+
            {/* Circular Arrow */}
            <div className="absolute bottom-4 right-4 w-6 h-6 rounded-full bg-[#52627A] hover:bg-[#071A3D] cursor-pointer transition-colors flex items-center justify-center">
               <ArrowRight className="w-3 h-3 text-white" />
@@ -153,7 +145,7 @@ const Login = () => {
 
       {/* RIGHT SECTION (46%) */}
       <div className="w-full lg:w-[46%] bg-gradient-to-b from-[#F8FBFF] to-white flex flex-col items-center justify-center py-10 px-4 sm:px-8 relative overflow-y-auto">
-        
+
         {/* Main Login Card */}
         <div className="w-full max-w-[560px] bg-white rounded-[16px] shadow-[0_4px_30px_rgba(0,0,0,0.03)] border border-[#D8E4F2] p-8 sm:p-10 mb-6">
           <h2 className="text-[34px] sm:text-[38px] font-bold text-[#071A3D] mb-2 tracking-tight">Login to Your Account</h2>
@@ -165,7 +157,7 @@ const Login = () => {
                 {errors.general}
               </div>
             )}
-            
+
             {/* Email Field */}
             <div>
               <label htmlFor="login-email" className="block text-[14px] font-bold text-[#071A3D] mb-2">Email Address</label>
@@ -198,8 +190,8 @@ const Login = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#A0B0C7] hover:text-[#071A3D] transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
@@ -237,7 +229,7 @@ const Login = () => {
             {/* Create Account Link (Moved up to replace social login) */}
             <div className="pt-6 text-center">
               <span className="text-[15px] text-[#52627A]">Don't have an account? </span>
-              <Link to="/register" className="text-[15px] font-bold text-[#0866FF] hover:text-[#0057E7] transition-colors">
+              <Link to={"/register" + location.search} className="text-[15px] font-bold text-[#0866FF] hover:text-[#0057E7] transition-colors">
                 Create Account
               </Link>
             </div>

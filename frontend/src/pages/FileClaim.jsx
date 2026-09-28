@@ -1,3 +1,5 @@
+import { api, uploadFile } from '../utils/api';
+import { showToast } from '../utils/toast';
 import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +9,7 @@ const FileClaim = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [policies, setPolicies] = useState([]);
-  
+
   const [formData, setFormData] = useState({
     policyId: '',
     incidentType: '',
@@ -22,8 +24,16 @@ const FileClaim = () => {
   const [submittedRef, setSubmittedRef] = useState(null);
 
   useEffect(() => {
-    const storedPolicies = readCollection('ipp_policies');
-    setPolicies(storedPolicies.filter(p => p.status === 'Active'));
+    let active = true;
+    (async () => {
+      try {
+
+    const storedPolicies = await readCollection('ipp_policies');
+    if (active) setPolicies(storedPolicies.filter(p => p.status === 'Active'));
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
   const handleNext = () => setStep(prev => prev + 1);
@@ -32,43 +42,30 @@ const FileClaim = () => {
   const handleFileDrop = (e) => {
     e.preventDefault();
     const droppedFiles = Array.from(e.dataTransfer.files);
-    setFiles(prev => [...prev, ...droppedFiles.map(f => ({ name: f.name, size: f.size }))]);
+    setFiles(prev => [...prev, ...droppedFiles]);
   };
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files);
-    setFiles(prev => [...prev, ...selected.map(f => ({ name: f.name, size: f.size }))]);
+    setFiles(prev => [...prev, ...selected]);
   };
 
   const removeFile = (index) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting || !formData.confirmed) return;
     setIsSubmitting(true);
-    
-    setTimeout(() => {
-      const ref = `CLM-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-      
-      const newClaim = {
-        id: ref,
-        policyId: formData.policyId,
-        policyName: policies.find(p => p.id === formData.policyId)?.name || 'Insurance Policy',
-        incident: formData.incidentType,
-        date: new Date(formData.incidentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        submittedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        amount: `$${parseInt(formData.amount).toLocaleString()}`,
-        status: 'Under Review',
-        description: formData.description
-      };
-
-      const existingClaims = readCollection('ipp_claims');
-      localStorage.setItem('ipp_claims', JSON.stringify([newClaim, ...existingClaims]));
-      
-      setSubmittedRef(ref);
-      setIsSubmitting(false);
-      setStep(5); // Success step
-    }, 1500);
+    try {
+      const claim = await api('/claims', { method: 'POST', body: formData });
+      setSubmittedRef(claim.id);
+      const uploads = await Promise.allSettled(files.map(file => uploadFile(file, claim.id)));
+      const failed = uploads.filter(result => result.status === 'rejected');
+      if (failed.length) showToast('Claim saved, but ' + failed.length + ' attachment(s) failed. Upload them from the claim details page.', 'warning');
+      setStep(5);
+    } catch (error) { showToast(error.message, 'error'); }
+    finally { setIsSubmitting(false); }
   };
 
   const steps = [
@@ -93,13 +90,13 @@ const FileClaim = () => {
           We have received your claim. You can track its progress from your Claims dashboard. An adjuster will review your case within 2-3 business days.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button 
+          <button
             onClick={() => navigate(`/claims/${submittedRef}`)}
             className="px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary-dark transition-colors"
           >
             Track Claim
           </button>
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             className="px-6 py-3 border border-borderMain text-textMain rounded-md font-medium hover:bg-gray-50 transition-colors"
           >
@@ -114,16 +111,16 @@ const FileClaim = () => {
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-textMain mb-6">File a New Claim</h1>
-        
+
         {/* Progress Bar */}
         <div className="relative flex justify-between items-center">
           <div className="absolute left-0 right-0 top-1/2 h-1 bg-gray-200 -z-10 -translate-y-1/2"></div>
           <div className="absolute left-0 top-1/2 h-1 bg-primary -z-10 -translate-y-1/2 transition-all duration-300" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}></div>
-          
+
           {steps.map((s) => (
             <div key={s.num} className="flex flex-col items-center gap-2">
               <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm border-4 transition-colors ${
-                step > s.num ? 'bg-primary border-primary text-white' : 
+                step > s.num ? 'bg-primary border-primary text-white' :
                 step === s.num ? 'bg-white border-primary text-primary' : 'bg-white border-gray-200 text-gray-400'
               }`}>
                 {step > s.num ? <CheckCircle className="h-5 w-5" /> : s.num}
@@ -135,20 +132,20 @@ const FileClaim = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-borderMain p-6 md:p-8">
-        
+
         {/* Step 1: Policy */}
         {step === 1 && (
           <div className="space-y-6 animate-fadeIn">
             <h2 className="text-xl font-bold text-textMain">Select Insurance Policy</h2>
             <p className="text-textSecondary text-sm mb-4">Which policy are you claiming against?</p>
-            
+
             <div className="space-y-4">
               {policies.map(policy => (
                 <label key={policy.id} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-all ${formData.policyId === policy.id ? 'border-primary bg-blue-50 ring-1 ring-primary' : 'border-borderMain hover:bg-gray-50'}`}>
-                  <input 
-                    type="radio" 
-                    name="policy" 
-                    className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300" 
+                  <input
+                    type="radio"
+                    name="policy"
+                    className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300"
                     checked={formData.policyId === policy.id}
                     onChange={() => setFormData({...formData, policyId: policy.id})}
                   />
@@ -159,9 +156,9 @@ const FileClaim = () => {
                 </label>
               ))}
             </div>
-            
+
             <div className="pt-6 flex justify-end">
-              <button 
+              <button
                 onClick={handleNext}
                 disabled={!formData.policyId}
                 className="px-6 py-2.5 bg-primary text-white rounded-md font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -176,11 +173,11 @@ const FileClaim = () => {
         {step === 2 && (
           <div className="space-y-6 animate-fadeIn">
             <h2 className="text-xl font-bold text-textMain">Incident Information</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-textMain mb-2">Incident Type</label>
-                <select 
+                <select
                   className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   value={formData.incidentType}
                   onChange={(e) => setFormData({...formData, incidentType: e.target.value})}
@@ -194,11 +191,11 @@ const FileClaim = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-textMain mb-2">Date of Incident</label>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   value={formData.incidentDate}
                   onChange={(e) => setFormData({...formData, incidentDate: e.target.value})}
@@ -207,8 +204,8 @@ const FileClaim = () => {
 
               <div>
                 <label className="block text-sm font-medium text-textMain mb-2">Location</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Where did this happen?"
                   className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   value={formData.location}
@@ -218,8 +215,8 @@ const FileClaim = () => {
 
               <div>
                 <label className="block text-sm font-medium text-textMain mb-2">Estimated Loss Amount ($)</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   placeholder="e.g. 5000"
                   className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   value={formData.amount}
@@ -229,7 +226,7 @@ const FileClaim = () => {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-textMain mb-2">Description of Incident</label>
-                <textarea 
+                <textarea
                   rows={4}
                   placeholder="Please provide details about what happened..."
                   className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
@@ -240,13 +237,13 @@ const FileClaim = () => {
             </div>
 
             <div className="pt-6 flex justify-between border-t border-borderMain mt-8">
-              <button 
+              <button
                 onClick={handlePrev}
                 className="px-6 py-2.5 border border-borderMain text-textMain rounded-md font-medium hover:bg-gray-50 transition-colors"
               >
                 Back
               </button>
-              <button 
+              <button
                 onClick={handleNext}
                 disabled={!formData.incidentType || !formData.incidentDate || !formData.description || !formData.amount}
                 className="px-6 py-2.5 bg-primary text-white rounded-md font-medium hover:bg-primary-dark disabled:opacity-50 transition-colors"
@@ -262,8 +259,8 @@ const FileClaim = () => {
           <div className="space-y-6 animate-fadeIn">
             <h2 className="text-xl font-bold text-textMain">Supporting Documents</h2>
             <p className="text-textSecondary text-sm mb-4">Upload photos, police reports, receipts, or any other relevant documents.</p>
-            
-            <div 
+
+            <div
               className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:bg-gray-50 hover:border-primary transition-colors cursor-pointer"
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
@@ -272,11 +269,11 @@ const FileClaim = () => {
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p className="text-textMain font-medium mb-1">Drag & Drop Supporting Documents</p>
               <p className="text-textSecondary text-sm">or click to Browse Files (JPG, PNG, PDF)</p>
-              <input 
-                id="file-upload" 
-                type="file" 
-                multiple 
-                className="hidden" 
+              <input
+                id="file-upload"
+                type="file"
+                multiple
+                className="hidden"
                 onChange={handleFileSelect}
                 accept="image/*,.pdf"
               />
@@ -350,9 +347,9 @@ const FileClaim = () => {
             </div>
 
             <label className="flex items-start gap-3 mt-6">
-              <input 
-                type="checkbox" 
-                className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" 
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 checked={formData.confirmed}
                 onChange={(e) => setFormData({...formData, confirmed: e.target.checked})}
               />
@@ -363,8 +360,8 @@ const FileClaim = () => {
 
             <div className="pt-6 flex justify-between border-t border-borderMain mt-8">
               <button onClick={handlePrev} disabled={isSubmitting} className="px-6 py-2.5 border border-borderMain text-textMain rounded-md font-medium hover:bg-gray-50 disabled:opacity-50">Back</button>
-              <button 
-                onClick={handleSubmit} 
+              <button
+                onClick={handleSubmit}
                 disabled={!formData.confirmed || isSubmitting}
                 className="px-6 py-2.5 bg-primary text-white rounded-md font-medium hover:bg-primary-dark disabled:opacity-50 flex items-center gap-2"
               >

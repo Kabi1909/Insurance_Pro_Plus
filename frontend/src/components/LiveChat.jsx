@@ -1,11 +1,14 @@
+import { api } from '../utils/api';
+import { showToast } from '../utils/toast';
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, User, Bot } from 'lucide-react';
 
 const LiveChat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, sender: 'support', text: 'Hi Albert! 👋 How can we help you today?', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
+    { id: 1, sender: 'support', text: 'How can we help? Send a message and support will reply here.', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
   ]);
+  const [ticket,setTicket]=useState(null);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -20,39 +23,11 @@ const LiveChat = () => {
     }
   }, [messages, isOpen, isTyping]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
-
-    const userMessage = {
-      id: Date.now(),
-      sender: 'user',
-      text: inputValue,
-      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsTyping(true);
-
-    // Simulate response
-    setTimeout(() => {
-      setIsTyping(false);
-      let replyText = "Thank you for your message. An agent will be with you shortly.";
-      
-      if (inputValue.toLowerCase().includes('claim')) {
-        replyText = "Of course! Your claim CLM-2026-0045 is currently under review. Would you like more information about the review process?";
-      } else if (inputValue.toLowerCase().includes('renew')) {
-        replyText = "You can renew your policies easily from the 'My Policies' tab on your dashboard.";
-      }
-
-      const supportMessage = {
-        id: Date.now() + 1,
-        sender: 'support',
-        text: replyText,
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-      };
-      setMessages(prev => [...prev, supportMessage]);
-    }, 1500);
+  const displayTicket = t => {setTicket(t);setMessages([{id:t.id,sender:'user',text:t.message,time:new Date(t.createdAt).toLocaleTimeString()},...(t.replies||[]).map(r=>({id:r.id,sender:r.author===t.name?'user':'support',text:r.text,time:new Date(r.time).toLocaleTimeString()}))]);};
+  useEffect(()=>{if(!isOpen)return;let active=true;const refresh=()=>api('/tickets').then(list=>{const t=list.find(t=>t.subject==='Dashboard chat'&&t.status==='Open');if(active&&t)displayTicket(t);}).catch(e=>{if(active)showToast(e.message,'error');});refresh();const timer=setInterval(refresh,15000);return()=>{active=false;clearInterval(timer);};},[isOpen]);
+  const handleSend = async () => {
+    if(!inputValue.trim()||isTyping)return;setIsTyping(true);
+    try{let updated;if(ticket)updated=await api('/tickets/'+ticket.id+'/messages',{method:'POST',body:{message:inputValue}});else{const created=await api('/tickets',{method:'POST',body:{subject:'Dashboard chat',message:inputValue}});updated=await api('/tickets/'+created.id);}displayTicket(updated);setInputValue('');}catch(e){showToast(e.message,'error');}finally{setIsTyping(false);}
   };
 
   const handleQuickOption = (option) => {
@@ -80,7 +55,7 @@ const LiveChat = () => {
               <h3 className="font-semibold">Insurance Pro Plus Support</h3>
               <div className="flex items-center gap-1.5 mt-1">
                 <div className="h-2 w-2 bg-success rounded-full"></div>
-                <span className="text-xs opacity-90">Online</span>
+                <span className="text-xs opacity-90">Leave a message</span>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white hover:bg-primary-dark p-1 rounded-md transition-colors">
@@ -122,7 +97,7 @@ const LiveChat = () => {
           {messages.length === 1 && (
              <div className="p-3 bg-gray-50 border-t border-borderMain flex flex-wrap gap-2">
                {['Policy Renewal', 'Claim Status', 'Payment Help'].map(opt => (
-                 <button 
+                 <button
                   key={opt}
                   onClick={() => handleQuickOption(opt)}
                   className="text-xs bg-white border border-borderMain text-textMain px-2.5 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
@@ -145,7 +120,7 @@ const LiveChat = () => {
             />
             <button
               onClick={handleSend}
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim()||isTyping}
               className="bg-primary text-white p-2 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="h-4 w-4" />

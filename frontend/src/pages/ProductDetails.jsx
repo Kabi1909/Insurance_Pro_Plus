@@ -1,12 +1,25 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import QuoteFlow from '../components/QuoteFlow';
+import { api } from '../utils/api';
+import MissingRecord from '../components/MissingRecord';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Shield, ChevronRight, CheckCircle, XCircle, ArrowRight, Phone } from 'lucide-react';
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [search, setSearch] = useSearchParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  useEffect(() => { let active=true; setLoading(true); api('/products').then(list=>{if(active)setProduct(list.find(p=>p.id===id)||null);}).catch(err=>{if(active)setError(err.message);}).finally(()=>{if(active)setLoading(false);}); return ()=>{active=false;}; },[id]);
+  if(loading) return <p className="p-8 text-center">Loading insurance details...</p>;
+  if(error) return <p role="alert" className="p-8 text-center text-red-600">{error}</p>;
+  if(!product) return <MissingRecord label="Insurance product" backTo="/products" />;
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
+      {search.get("quote") === "1" && <QuoteFlow product={product} onClose={() => setSearch({})} />}
       {/* Header */}
       <div className="bg-primary text-white py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
@@ -20,11 +33,11 @@ const ProductDetails = () => {
                   <li className="text-white font-medium">Details</li>
                 </ol>
              </nav>
-            <h1 className="text-4xl font-bold mb-4">Comprehensive Coverage</h1>
-            <p className="text-lg text-blue-100 mb-6">Protect what matters most with our flexible and tailored insurance plans designed specifically for your needs.</p>
+            <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
+            <p className="text-lg text-blue-100 mb-6">{product.desc}</p>
             <div className="flex gap-4">
-               <button className="bg-white text-primary px-6 py-3 rounded-md font-bold hover:bg-gray-100 transition-colors">Get a Quote</button>
-               <button className="border border-blue-400 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-800 transition-colors flex items-center gap-2">
+               <button onClick={() => setSearch(prev=>{prev.set("quote","1");return prev;})} className="bg-white text-primary px-6 py-3 rounded-md font-bold hover:bg-gray-100 transition-colors">Get a Quote</button>
+               <button onClick={() => navigate("/support")} className="border border-blue-400 text-white px-6 py-3 rounded-md font-bold hover:bg-blue-800 transition-colors flex items-center gap-2">
                  <Phone className="h-4 w-4" /> Contact Advisor
                </button>
             </div>
@@ -36,14 +49,14 @@ const ProductDetails = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10 space-y-6">
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
-            
+
             <div className="bg-white p-8 rounded-xl shadow-sm border border-borderMain">
               <h2 className="text-2xl font-bold text-textMain mb-4">What's Covered</h2>
               <ul className="space-y-4">
-                {['Accidental damage and loss', 'Third-party liabilities', 'Legal expenses coverage', 'Emergency support 24/7'].map((item, i) => (
+                {product.benefits.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                      <CheckCircle className="h-6 w-6 text-success shrink-0" />
                      <span className="text-textSecondary">{item}</span>
@@ -55,7 +68,7 @@ const ProductDetails = () => {
             <div className="bg-white p-8 rounded-xl shadow-sm border border-borderMain">
               <h2 className="text-2xl font-bold text-textMain mb-4">What's Not Covered</h2>
               <ul className="space-y-4">
-                {['Intentional damage or negligence', 'Pre-existing conditions before policy start', 'Wear and tear over time'].map((item, i) => (
+                {product.exclusions.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                      <XCircle className="h-6 w-6 text-error shrink-0" />
                      <span className="text-textSecondary">{item}</span>
@@ -66,7 +79,7 @@ const ProductDetails = () => {
 
             <div className="bg-white p-8 rounded-xl shadow-sm border border-borderMain">
               <h2 className="text-2xl font-bold text-textMain mb-4">Eligibility</h2>
-              <p className="text-textSecondary leading-relaxed">Available to individuals aged 18-65 and registered businesses operating within the country. Subject to standard underwriting criteria.</p>
+              <p className="text-textSecondary leading-relaxed">{product.eligibility}</p>
             </div>
 
           </div>

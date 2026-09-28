@@ -1,9 +1,3 @@
-export function readCollection(key, fallback = []) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key) || 'null');
-    return Array.isArray(value) && value.every(item => item && typeof item === 'object' && !Array.isArray(item))
-      ? value : fallback;
-  } catch {
-    return fallback;
-  }
-}
+import { api } from './api.js';
+const paths = { ipp_policies: '/policies', ipp_claims: '/claims', ipp_payments: '/payments' };
+export const readCollection = key => api(paths[key] || '/admin/' + key.replace('ipp_admin_', ''));

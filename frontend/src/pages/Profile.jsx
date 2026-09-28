@@ -1,18 +1,20 @@
+import PasswordDialog from '../components/PasswordDialog';
 import { showToast } from '../utils/toast';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { User, Mail, Globe, Briefcase, Phone, Save, Lock, Bell, Shield } from 'lucide-react';
 
 const Profile = () => {
-  const { user, updateProfile } = useContext(AuthContext);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const { user, updateProfile, uploadAvatar } = useContext(AuthContext);
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const name = data.get('name').trim();
     if (!name) return showToast('Full name is required.', 'error');
     try {
-      updateProfile({ name, phone: data.get('phone').trim(), country: data.get('country').trim(),
+      await updateProfile({ name, phone: data.get('phone').trim(), country: data.get('country').trim(),
         ...(user.accountType === 'Business' ? { businessName: data.get('businessName').trim() } : {}) });
       showToast('Profile updated successfully.');
     } catch (error) { showToast(error.message, 'error'); }
@@ -22,21 +24,22 @@ const Profile = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {passwordOpen && <PasswordDialog onClose={() => setPasswordOpen(false)} />}
       <h1 className="text-2xl font-bold text-textMain">Profile Settings</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Left Column: Personal Info */}
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
             <h2 className="text-lg font-bold text-textMain mb-6 border-b border-borderMain pb-2">Personal Information</h2>
-            
+
             <div className="flex items-center gap-6 mb-8">
               <div className="h-24 w-24 bg-blue-100 rounded-full flex items-center justify-center text-primary text-3xl font-bold">
-                {user.name.charAt(0)}
+                {user.avatarUrl?<img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover rounded-full"/>:user.name.charAt(0)}
               </div>
               <div>
-                <button className="bg-white border border-borderMain text-textMain px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 mb-2">Change Picture</button>
+                <label className="inline-block cursor-pointer bg-white border border-borderMain text-textMain px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 mb-2">Change Picture<input type="file" accept="image/png,image/jpeg" className="sr-only" onChange={async e=>{const file=e.target.files[0];e.target.value='';if(file)try{await uploadAvatar(file);showToast('Profile picture updated.');}catch(error){showToast(error.message,'error');}}}/></label>
                 <p className="text-xs text-textSecondary">JPG, PNG under 2MB</p>
               </div>
             </div>
@@ -100,7 +103,7 @@ const Profile = () => {
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
             <h2 className="text-lg font-bold text-textMain mb-4 border-b border-borderMain pb-2">Security</h2>
             <div className="space-y-4">
-              <button onClick={() => showToast("Password changes are unavailable in this demo.", "warning")} className="w-full flex items-center justify-between p-3 border border-borderMain rounded-lg hover:bg-gray-50 transition-colors">
+              <button onClick={() => setPasswordOpen(true)} className="w-full flex items-center justify-between p-3 border border-borderMain rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-3">
                   <Lock className="h-5 w-5 text-textSecondary" />
                   <div className="text-left">
@@ -120,7 +123,7 @@ const Profile = () => {
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
-                <p className="text-xs text-textSecondary pl-8">Two-factor authentication is unavailable in this demo.</p>
+                <p className="text-xs text-textSecondary pl-8">Two-factor authentication is not configured.</p>
               </div>
             </div>
           </div>
@@ -137,7 +140,7 @@ const Profile = () => {
                 <label key={idx} className="flex items-center justify-between">
                   <span className="text-sm text-textMain">{pref.label}</span>
                   <div className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked={pref.defaultChecked} className="sr-only peer" />
+                    <input type="checkbox" checked={user.preferences?.[pref.label]??pref.defaultChecked} onChange={async e=>{try{await updateProfile({preferences:{...Object.fromEntries(['Policy Renewals','Claim Updates','Payment Receipts'].map(k=>[k,true])),...user.preferences,[pref.label]:e.target.checked}});}catch(error){showToast(error.message,'error');}}} className="sr-only peer" />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                   </div>
                 </label>

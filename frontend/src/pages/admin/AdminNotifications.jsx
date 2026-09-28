@@ -1,3 +1,6 @@
+import { paymentText } from '../../utils/paymentText';
+import { api } from '../../utils/api';
+import { showToast } from '../../utils/toast';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,8 +13,16 @@ const AdminNotifications = () => {
   const [activeTab, setActiveTab] = useState('All');
 
   useEffect(() => {
-    const data = readCollection('ipp_admin_notifications');
-    setNotifications(data);
+    let active = true;
+    (async () => {
+      try {
+
+    const data = await readCollection('ipp_admin_notifications');
+    if (active) setNotifications(data);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
   const tabs = ['All', 'Unread', 'Claims', 'Policies', 'Payments', 'Documents'];
@@ -42,24 +53,9 @@ const AdminNotifications = () => {
     }
   };
 
-  const toggleRead = (id, currentRead) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, read: !currentRead } : n);
-    setNotifications(updated);
-    localStorage.setItem('ipp_admin_notifications', JSON.stringify(updated));
-  };
-
-  const markAllRead = () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updated);
-    localStorage.setItem('ipp_admin_notifications', JSON.stringify(updated));
-  };
-
-  const handleNotifClick = (notif) => {
-    if (!notif.read) toggleRead(notif.id, false);
-    if (notif.category === 'Claims') navigate(`/admin/claims/${notif.resourceId}`);
-    if (notif.category === 'Policies') navigate(`/admin/policies/${notif.resourceId}`);
-    if (notif.category === 'Documents') navigate(`/admin/documents`);
-  };
+  const toggleRead = async (id, currentRead) => {try{await api('/notifications/'+id,{method:'PATCH',body:{read:!currentRead}});setNotifications(await api('/admin/notifications'));}catch(error){showToast(error.message,'error');}};
+  const markAllRead = async () => {try{await api('/notifications/all',{method:'PATCH',body:{read:true}});setNotifications(await api('/admin/notifications'));}catch(error){showToast(error.message,'error');}};
+  const handleNotifClick = notif => {if(!notif.read)toggleRead(notif.id,false);if(notif.link)navigate(notif.link);};
 
   return (
     <div className="space-y-6">
@@ -85,7 +81,7 @@ const AdminNotifications = () => {
         <div className="p-4 border-b border-slate-200 overflow-x-auto hide-scrollbar">
            <div className="flex gap-2">
              {tabs.map(tab => (
-               <button 
+               <button
                  key={tab}
                  onClick={() => setActiveTab(tab)}
                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
@@ -120,19 +116,19 @@ const AdminNotifications = () => {
                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleNotifClick(notif)}>
                      <div className="flex items-start justify-between gap-4 mb-1">
                         <h4 className={`text-sm font-bold truncate ${!notif.read ? 'text-slate-900' : 'text-slate-700'}`}>
-                          {notif.title}
+                          {paymentText(notif.title)}
                           {!notif.read && <span className="inline-block w-2 h-2 rounded-full bg-blue-600 ml-2 mb-0.5"></span>}
                         </h4>
                         <span className="text-xs text-slate-500 whitespace-nowrap">{notif.time}</span>
                      </div>
-                     <p className="text-sm text-slate-600 mb-2">{notif.description}</p>
+                     <p className="text-sm text-slate-600 mb-2">{notif.message}</p>
                      <div className="flex items-center gap-3 mt-2">
                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{notif.category}</span>
                        {notif.resourceId && <span className="text-xs font-medium text-blue-600 hover:underline">{notif.resourceId}</span>}
                      </div>
                    </div>
                    <div className="shrink-0 flex items-start">
-                     <button 
+                     <button
                        onClick={(e) => { e.stopPropagation(); toggleRead(notif.id, notif.read); }}
                        className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
                        title={notif.read ? "Mark as unread" : "Mark as read"}

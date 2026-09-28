@@ -1,18 +1,24 @@
+import SupportInbox from '../components/SupportInbox';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import { api } from '../utils/api';
+import { showToast } from '../utils/toast';
 import React from 'react';
 import { MessageSquare, Mail, Phone, LifeBuoy } from 'lucide-react';
 
 const Support = () => {
+  const {user}=useContext(AuthContext);
   return (
     <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-textMain mb-4">How Can We Help?</h1>
+        {user&&<SupportInbox/>}<h1 className="text-3xl font-bold text-textMain mb-4">How Can We Help?</h1>
         <p className="text-textSecondary max-w-2xl mx-auto">Our dedicated support team is here to assist you with any questions or issues you may have.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
         {[
           { icon: MessageSquare, title: 'Live Chat', desc: 'Available 24/7' },
-          { icon: Mail, title: 'Email Support', desc: 'support@insuranceproplus.demo' },
+          { icon: Mail, title: 'Email Support', desc: 'support@insuranceproplus.com' },
           { icon: Phone, title: 'Call Us', desc: '+1 800 555 0123' },
           { icon: LifeBuoy, title: 'Help Center', desc: 'Browse our guides' },
         ].map((item, idx) => (
@@ -28,24 +34,24 @@ const Support = () => {
 
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl border border-borderMain shadow-sm">
         <h2 className="text-2xl font-bold text-textMain mb-6 text-center">Send Us a Message</h2>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Message sent successfully!'); }}>
+        <form className="space-y-4" onSubmit={async e => { e.preventDefault(); const form=e.currentTarget; try { const result=await api('/tickets',{method:'POST',body:Object.fromEntries(new FormData(form))}); showToast('Support request saved: '+result.id); form.reset(); } catch(error) { showToast(error.message,'error'); } }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-textMain mb-1">Name</label>
-              <input required type="text" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
+              <input name="name" required type="text" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
             </div>
             <div>
               <label className="block text-sm font-medium text-textMain mb-1">Email</label>
-              <input required type="email" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
+              <input name="email" required type="email" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-textMain mb-1">Subject</label>
-            <input required type="text" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
+            <input name="subject" required type="text" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-textMain mb-1">Message</label>
-            <textarea required rows="5" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"></textarea>
+            <textarea name="message" required rows="5" className="w-full border border-borderMain rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"></textarea>
           </div>
           <button type="submit" className="w-full bg-primary text-white py-3 rounded-md font-medium hover:bg-primary-dark transition-colors">
             Send Message

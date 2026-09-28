@@ -1,3 +1,6 @@
+import RecordDocuments from '../components/RecordDocuments';
+import MessageThread from '../components/MessageThread';
+import { showToast } from '../utils/toast';
 import MissingRecord from '../components/MissingRecord';
 import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
@@ -6,14 +9,24 @@ import { ChevronRight, FileText, CheckCircle, Clock, AlertCircle, MessageSquare 
 
 const ClaimDetails = () => {
   const { id } = useParams();
+  const [recordLoading,setRecordLoading]=useState(true);
   const [claim, setClaim] = useState(null);
 
   useEffect(() => {
-    const storedClaims = readCollection('ipp_claims');
+    let active = true;setRecordLoading(true);
+    (async () => {
+      try {
+
+    const storedClaims = await readCollection('ipp_claims');
     const foundClaim = storedClaims.find(c => c.id === id);
-    setClaim(foundClaim || null);
+    if (active) setClaim(foundClaim || null);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); } finally { if(active)setRecordLoading(false); }
+    })();
+    return () => { active = false; };
   }, [id]);
 
+  if(recordLoading)return <p className="p-6 text-slate-500">Loading record…</p>;
   if (!claim) return <MissingRecord label="Claim" backTo="/claims" />;
 
   const getStatusIcon = (status) => {
@@ -21,15 +34,7 @@ const ClaimDetails = () => {
     return <Clock className="h-5 w-5 text-accent" />;
   };
 
-  const getTimelineStatus = (stepName) => {
-    const steps = ['Claim Submitted', 'Documents Received', 'Under Review', 'Decision', 'Payment'];
-    const claimIdx = steps.indexOf(claim.status === 'Completed' ? 'Payment' : (claim.status === 'Approved' ? 'Decision' : 'Under Review'));
-    const stepIdx = steps.indexOf(stepName);
-    
-    if (stepIdx < claimIdx) return 'completed';
-    if (stepIdx === claimIdx) return 'active';
-    return 'pending';
-  };
+  const getTimelineStatus = stepName => {if(stepName==='Claim Submitted')return claim.status==='Submitted'?'active':'completed';if(stepName===claim.status)return 'active';if(stepName==='Decision')return ['Approved','Rejected','Paid'].includes(claim.status)?'completed':'pending';return claim.status==='Paid'?'completed':'pending';};
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -86,42 +91,31 @@ const ClaimDetails = () => {
 
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
              <h2 className="text-lg font-bold text-textMain mb-4">Uploaded Documents</h2>
-             <div className="flex items-center justify-between p-3 border border-borderMain rounded-lg hover:bg-gray-50 cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center text-primary">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-textMain">incident_report.pdf</p>
-                    <p className="text-xs text-textSecondary">Uploaded {claim.submittedDate}</p>
-                  </div>
-                </div>
-                <span className="text-primary text-sm font-medium">View</span>
-             </div>
+             <RecordDocuments related={claim.id} />
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6"><div className="bg-white p-6 rounded-xl border border-borderMain"><h2 className="text-lg font-bold mb-4">Messages</h2><MessageThread kind="claims" record={claim} onUpdate={setClaim}/></div>
           <div className="bg-white p-6 rounded-xl border border-borderMain shadow-sm">
             <h2 className="text-lg font-bold text-textMain mb-6">Status Timeline</h2>
             <div className="relative pl-6 space-y-8">
               <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-gray-200"></div>
-              
+
               {[
                 { name: 'Claim Submitted', desc: 'We received your claim details.', time: claim.submittedDate },
-                { name: 'Documents Received', desc: 'All required files attached.', time: claim.submittedDate },
-                { name: 'Under Review', desc: 'An adjuster is reviewing your claim.', time: 'Current' },
-                { name: 'Decision', desc: 'Pending adjuster decision.', time: '' },
-                { name: 'Payment', desc: 'Pending approval.', time: '' }
+
+                { name: claim.status, desc: 'Current claim status', time: '' },
+                { name: 'Decision', desc: ['Approved','Rejected','Paid'].includes(claim.status)?claim.status:'Pending adjuster decision.', time: '' },
+                { name: 'Payment', desc: claim.status==='Paid'?'Payment recorded.':claim.status==='Rejected'?'Not applicable.':'Pending approval and settlement.', time: '' }
               ].map((step, idx) => {
                 const status = getTimelineStatus(step.name);
                 return (
                   <div key={idx} className="relative">
                     <div className={`absolute -left-9 h-6 w-6 rounded-full flex items-center justify-center ring-4 ring-white ${
-                      status === 'completed' ? 'bg-success' : 
+                      status === 'completed' ? 'bg-success' :
                       status === 'active' ? 'bg-primary' : 'bg-gray-200'
                     }`}>
-                      {status === 'completed' ? <CheckCircle className="h-4 w-4 text-white" /> : 
+                      {status === 'completed' ? <CheckCircle className="h-4 w-4 text-white" /> :
                        status === 'active' ? <div className="h-2 w-2 bg-white rounded-full"></div> : null}
                     </div>
                     <div>
@@ -139,7 +133,7 @@ const ClaimDetails = () => {
             <AlertCircle className="h-8 w-8 text-primary mx-auto mb-3" />
             <h3 className="font-semibold text-textMain mb-2">Need help with this claim?</h3>
             <p className="text-sm text-textSecondary mb-4">Chat with our support team to get real-time updates.</p>
-            <button 
+            <button
               onClick={() => document.querySelector('.fixed.bottom-6.right-6')?.click()}
               className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-primary-dark transition-colors"
             >

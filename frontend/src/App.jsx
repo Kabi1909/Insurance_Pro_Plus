@@ -1,3 +1,4 @@
+import ServiceNotice from './pages/ServiceNotice';
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout';
@@ -65,7 +66,7 @@ function App() {
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/support" element={<Support />} />
-        <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<ServiceNotice />} /><Route path="/privacy" element={<ServiceNotice privacy />} /><Route path="/about" element={<About />} />
         <Route path="/public-claims" element={<PublicClaims />} />
       </Route>
 

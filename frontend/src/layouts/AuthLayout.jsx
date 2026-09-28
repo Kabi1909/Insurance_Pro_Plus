@@ -1,17 +1,22 @@
-import React, { useContext, useState } from 'react';
+import { paymentText } from '../utils/paymentText';
+import PasswordDialog from '../components/PasswordDialog';
+import PublicSearch from '../components/PublicSearch';
+import { api } from '../utils/api';
+import { showToast } from '../utils/toast';
+import React, { useContext, useState, useEffect } from 'react';
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { 
-  Shield, 
-  Home, 
-  FileText, 
-  AlertCircle, 
-  CreditCard, 
-  Package, 
-  Tag, 
-  Newspaper, 
-  HelpCircle, 
-  User, 
+import {
+  Shield,
+  Home,
+  FileText,
+  AlertCircle,
+  CreditCard,
+  Package,
+  Tag,
+  Newspaper,
+  HelpCircle,
+  User,
   LogOut,
   Bell,
   Search,
@@ -22,14 +27,18 @@ import {
 import LiveChat from '../components/LiveChat';
 
 const AuthLayout = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, loading } = useContext(AuthContext);
+  const [searchOpen,setSearchOpen]=useState(false);
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const [notifications,setNotifications]=useState([]);
+  useEffect(()=>{if(!user)return;let active=true;api('/notifications').then(v=>{if(active)setNotifications(v);}).catch(e=>{if(active)showToast(e.message,'error');});return()=>{active=false;};},[user,location.pathname,showNotifications]);
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading your account...</div>;
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={"/login?next=" + encodeURIComponent(location.pathname + location.search)} replace />;
   }
 
   const sidebarLinks = [
@@ -45,21 +54,19 @@ const AuthLayout = () => {
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
+  if(user.mustChangePassword)return <PasswordDialog onClose={()=>{}}/>;
   const handleLogout = () => {
     logout();
   };
 
-  const notifications = [
-    "Your Business Property policy expires soon.",
-    "Your claim CLM-2026-0045 is under review.",
-    "Payment of $250 was successfully received."
-  ];
+
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex">
+      {searchOpen&&<PublicSearch customer onClose={()=>setSearchOpen(false)}/>}
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -86,8 +93,8 @@ const AuthLayout = () => {
                 key={item.name}
                 to={item.path}
                 className={`flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-primary' 
+                  isActive
+                    ? 'bg-blue-50 text-primary'
                     : 'text-textSecondary hover:bg-gray-50 hover:text-textMain'
                 }`}
                 onClick={() => setSidebarOpen(false)}
@@ -115,7 +122,7 @@ const AuthLayout = () => {
         {/* Top bar */}
         <header className="h-16 bg-white border-b border-borderMain flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               className="md:hidden text-textSecondary hover:text-textMain"
               onClick={() => setSidebarOpen(true)}
             >
@@ -123,9 +130,9 @@ const AuthLayout = () => {
             </button>
             <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-textSecondary" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
+              <input
+                type="text"
+                placeholder="Search..." onFocus={()=>setSearchOpen(true)} readOnly
                 className="pl-10 pr-4 py-2 border border-borderMain rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-64"
               />
             </div>
@@ -133,12 +140,12 @@ const AuthLayout = () => {
 
           <div className="flex items-center gap-4">
             <div className="relative">
-              <button 
+              <button
                 className="p-2 text-textSecondary hover:text-textMain hover:bg-gray-100 rounded-full relative"
                 onClick={() => setShowNotifications(!showNotifications)}
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-error rounded-full ring-2 ring-white"></span>
+                {notifications.some(n=>!n.read)&&<span className="absolute top-1.5 right-1.5 h-2 w-2 bg-error rounded-full ring-2 ring-white"></span>}
               </button>
 
               {/* Notifications Dropdown */}
@@ -146,13 +153,13 @@ const AuthLayout = () => {
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-borderMain overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-borderMain flex justify-between items-center bg-gray-50">
                     <h3 className="font-semibold text-textMain">Notifications</h3>
-                    <button className="text-xs text-primary hover:underline">Mark all read</button>
+                    <button onClick={async()=>{try{await api('/notifications/all',{method:'PATCH',body:{read:true}});setNotifications(list=>list.map(n=>({...n,read:true})));}catch(e){showToast(e.message,'error');}}} className="text-xs text-primary hover:underline">Mark all read</button>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {notifications.map((notif, idx) => (
-                      <div key={idx} className="px-4 py-3 border-b border-borderMain last:border-b-0 hover:bg-gray-50 cursor-pointer">
-                        <p className="text-sm text-textMain">{notif}</p>
-                      </div>
+                      <Link to={notif.link||'/dashboard'} onClick={()=>setShowNotifications(false)} key={notif.id} className="block px-4 py-3 border-b border-borderMain last:border-b-0 hover:bg-gray-50 cursor-pointer">
+                        <p className="text-sm text-textMain">{paymentText(notif.title)}: {notif.message}</p>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -185,13 +192,13 @@ const AuthLayout = () => {
             <h3 className="text-lg font-bold text-textMain mb-2">Log out of Insurance Pro Plus?</h3>
             <p className="text-textSecondary mb-6">Are you sure you want to log out?</p>
             <div className="flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setShowLogoutConfirm(false)}
                 className="px-4 py-2 border border-borderMain rounded-md text-textMain hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-error text-white rounded-md hover:bg-red-700 transition-colors"
               >

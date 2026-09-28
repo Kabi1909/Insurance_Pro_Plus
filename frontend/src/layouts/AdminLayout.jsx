@@ -1,3 +1,7 @@
+import { paymentText } from '../utils/paymentText';
+import PasswordDialog from '../components/PasswordDialog';
+import { api } from '../utils/api';
+import { showToast } from '../utils/toast';
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { AdminAuthContext } from '../context/AdminAuthContext';
@@ -8,7 +12,7 @@ import {
 import ConfirmDialog from '../components/admin/ConfirmDialog';
 
 const AdminLayout = () => {
-  const { admin, logout } = useContext(AdminAuthContext);
+  const { admin, logout, loading } = useContext(AdminAuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
@@ -17,7 +21,7 @@ const AdminLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchDrop, setShowSearchDrop] = useState(false);
-  
+
   const notifRef = useRef(null);
   const searchRef = useRef(null);
 
@@ -30,12 +34,17 @@ const AdminLayout = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [results,setResults]=useState([]); const [notifications,setNotifications]=useState([]);
+  useEffect(()=>{if(!admin)return;let active=true;const timer=setTimeout(()=>api('/admin/search?q='+encodeURIComponent(searchQuery)).then(v=>{if(active)setResults(v);}).catch(e=>{if(active)showToast(e.message,'error');}),250);return()=>{active=false;clearTimeout(timer);};},[admin,searchQuery]);
+  useEffect(()=>{if(!admin)return;let active=true;api('/notifications').then(v=>{if(active)setNotifications(v);}).catch(e=>{if(active)showToast(e.message,'error');});return()=>{active=false;};},[admin,location.pathname,showNotifications]);
   const currentAdmin = admin;
 
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading your account...</div>;
   if (!currentAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 
+  if(currentAdmin.mustChangePassword)return <PasswordDialog onClose={()=>{}}/>;
   const handleLogout = () => {
     setShowLogoutConfirm(false);
     logout();
@@ -59,9 +68,9 @@ const AdminLayout = () => {
   const getBreadcrumbs = () => {
     const path = location.pathname.replace('/admin', '');
     const parts = path.split('/').filter(Boolean);
-    
+
     if (parts.length === 0) return [{ name: 'Dashboard' }];
-    
+
     return parts.map((part, index) => {
       const name = part.charAt(0).toUpperCase() + part.slice(1).replace('-', ' ');
       // If it's an ID (usually second part)
@@ -76,19 +85,19 @@ const AdminLayout = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
-      
+
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`fixed lg:static inset-y-0 left-0 z-50 bg-[#0F2747] text-white transition-all duration-300 ease-in-out flex flex-col
-          ${collapsed ? 'w-20' : 'w-64'} 
+          ${collapsed ? 'w-20' : 'w-64'}
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
@@ -100,7 +109,7 @@ const AdminLayout = () => {
              </div>
              {!collapsed && <span className="font-bold text-lg whitespace-nowrap tracking-tight">Insurance Pro</span>}
           </div>
-          <button 
+          <button
             className="lg:hidden text-slate-400 hover:text-white"
             onClick={() => setMobileSidebarOpen(false)}
           >
@@ -144,7 +153,7 @@ const AdminLayout = () => {
              <HelpCircle className="h-5 w-5 shrink-0 text-slate-400 group-hover:text-white" />
              {!collapsed && <span className="text-sm font-medium">Help & Support</span>}
           </Link>
-          <div 
+          <div
              onClick={() => navigate('/admin/profile')}
              className={`flex items-center gap-3 px-3 py-3 rounded-lg text-slate-300 hover:bg-[#1A365D] transition-colors cursor-pointer group relative ${collapsed ? 'justify-center' : ''}`}
           >
@@ -158,7 +167,7 @@ const AdminLayout = () => {
                </div>
              )}
           </div>
-          <button 
+          <button
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors group relative ${collapsed ? 'justify-center' : ''}`}
             onClick={() => setShowLogoutConfirm(true)}
           >
@@ -170,25 +179,25 @@ const AdminLayout = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        
+
         {/* Top Navbar */}
         <header className="h-16 bg-white border-b border-slate-200 shrink-0 flex items-center justify-between px-4 lg:px-6 z-30">
-          
+
           <div className="flex items-center gap-4 flex-1">
-            <button 
+            <button
               className="lg:hidden text-slate-500 hover:text-slate-800 p-1"
               onClick={() => setMobileSidebarOpen(true)}
             >
               <Menu className="h-6 w-6" />
             </button>
-            
-            <button 
+
+            <button
               className="hidden lg:block text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-md transition-colors"
               onClick={() => setCollapsed(!collapsed)}
             >
               {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
-            
+
             {/* Breadcrumbs */}
             <div className="hidden sm:flex items-center text-sm font-medium text-slate-500">
                <span className="text-slate-400">Admin</span>
@@ -202,14 +211,14 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-3 lg:gap-5 flex-1 justify-end">
-            
+
             {/* Global Search */}
             <div className="relative hidden md:block w-64 lg:w-80" ref={searchRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search customer, policy, claim..." 
+                <input
+                  type="text"
+                  placeholder="Search customer, policy, claim..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -221,60 +230,33 @@ const AdminLayout = () => {
               </div>
               {showSearchDrop && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
-                   <div className="p-2">
-                     <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customers</div>
-                     <div className="px-3 py-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors" onClick={() => {navigate('/admin/customers/CUS-10291'); setShowSearchDrop(false);}}>
-                       <p className="text-sm font-semibold text-slate-900">Nimal Perera</p>
-                       <p className="text-xs text-slate-500">CUS-10291</p>
-                     </div>
-                     <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">Claims</div>
-                     <div className="px-3 py-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors" onClick={() => {navigate('/admin/claims/CLM-10482'); setShowSearchDrop(false);}}>
-                       <p className="text-sm font-semibold text-slate-900">CLM-10482</p>
-                       <p className="text-xs text-slate-500">Nimal Perera — Motor Claim</p>
-                     </div>
-                     <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">Policies</div>
-                     <div className="px-3 py-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors" onClick={() => {navigate('/admin/policies/POL-23892'); setShowSearchDrop(false);}}>
-                       <p className="text-sm font-semibold text-slate-900">POL-23892</p>
-                       <p className="text-xs text-slate-500">Motor Insurance</p>
-                     </div>
+                   <div className="p-2">{results.map(r=><button key={r.id} onClick={()=>{navigate(r.link);setShowSearchDrop(false);}} className="block w-full text-left px-3 py-2 hover:bg-slate-50 rounded-lg"><p className="text-sm font-semibold">{r.name}</p><p className="text-xs text-slate-500">{r.kind} · {r.id}</p></button>)}{!results.length&&<p className="p-3 text-sm text-slate-500">No matching records.</p>}
                    </div>
                 </div>
               )}
             </div>
 
-            
+
 
             {/* Notification Bell */}
             <div className="relative" ref={notifRef}>
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)} 
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
                 className="text-slate-400 hover:text-slate-600 p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg relative transition-colors"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                {notifications.some(n=>!n.read)&&<span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full ring-2 ring-white"></span>}
               </button>
-              
+
               {showNotifications && (
                 <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <span className="font-bold text-slate-900">Notifications</span>
-                    <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">2 New</span>
+                    <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{notifications.filter(n=>!n.read).length} New</span>
                   </div>
-                  <div className="max-h-80 overflow-y-auto">
-                    <div className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors">
-                      <p className="text-sm font-medium text-slate-900">New claim submitted</p>
-                      <p className="text-xs text-slate-500 mt-0.5">CLM-10482 • 5 min ago</p>
-                    </div>
-                    <div className="px-4 py-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors">
-                      <p className="text-sm font-medium text-slate-900">Payment failed</p>
-                      <p className="text-xs text-slate-500 mt-0.5">POL-44219 • 20 min ago</p>
-                    </div>
-                    <div className="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors opacity-60">
-                      <p className="text-sm font-medium text-slate-900">Policy expiring soon</p>
-                      <p className="text-xs text-slate-500 mt-0.5">POL-23892 • 1 hour ago</p>
-                    </div>
+                  <div className="max-h-80 overflow-y-auto">{notifications.slice(0,5).map(n=><button key={n.id} onClick={()=>{navigate(n.link||'/admin/notifications');setShowNotifications(false);}} className="w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50"><p className="text-sm font-medium">{paymentText(n.title)}</p><p className="text-xs text-slate-500">{n.message}</p></button>)}{!notifications.length&&<p className="p-4 text-sm text-slate-500">No notifications.</p>}
                   </div>
-                  <div 
+                  <div
                     className="p-3 bg-slate-50 text-center border-t border-slate-100 text-sm font-semibold text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
                     onClick={() => { setShowNotifications(false); navigate('/admin/notifications'); }}
                   >
@@ -283,7 +265,7 @@ const AdminLayout = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-slate-200 cursor-pointer hover:bg-slate-50 p-1.5 rounded-lg transition-colors" onClick={() => navigate('/admin/profile')}>
               <div className="text-right">
                 <p className="text-sm font-bold text-slate-900 leading-none">{currentAdmin.name}</p>
@@ -302,12 +284,12 @@ const AdminLayout = () => {
         </main>
       </div>
 
-      <ConfirmDialog 
-        isOpen={showLogoutConfirm} 
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
         title="Sign Out?"
         message="Are you sure you want to sign out of the administration portal?"
-        onConfirm={handleLogout} 
-        onCancel={() => setShowLogoutConfirm(false)} 
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
         confirmText="Sign Out"
         type="warning"
       />

@@ -1,3 +1,6 @@
+import RecordFilter from '../../components/admin/RecordFilter';
+import { download, money } from '../../utils/api';
+import { api } from '../../utils/api';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +12,7 @@ import { Search, Filter, Users, UserPlus, MoreVertical, ShieldAlert } from 'luci
 import { showToast } from '../../utils/toast';
 
 const AdminStaff = () => {
+  const [statusFilter,setStatusFilter]=useState('');
   const navigate = useNavigate();
   const [staffList, setStaffList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,12 +20,20 @@ const AdminStaff = () => {
   const [newStaff, setNewStaff] = useState({ firstName: '', lastName: '', email: '', phone: '', empId: '', department: 'Claims', role: 'Claims Officer' });
 
   useEffect(() => {
-    const data = readCollection('ipp_admin_staff');
-    setStaffList(data);
+    let active = true;
+    (async () => {
+      try {
+
+    const data = await readCollection('ipp_admin_staff');
+    if (active) setStaffList(data);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
-  const filteredStaff = staffList.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredStaff = staffList.filter(s =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -44,35 +56,18 @@ const AdminStaff = () => {
     { header: 'Assigned Claims', accessor: 'assignedClaims', render: (row) => row.assignedClaims > 0 ? <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-semibold">{row.assignedClaims} Claims</span> : <span className="text-slate-400">-</span> },
     { header: 'Status', accessor: 'status', render: (row) => <StatusBadge status={row.status} /> },
     { header: 'Last Active', accessor: 'lastActive', className: 'text-slate-500 text-xs' },
-    { 
-      header: 'Actions', 
+    {
+      header: 'Actions',
       render: (row) => (
         <button onClick={(e) => { e.stopPropagation(); navigate(`/admin/staff/${row.id}`); }} className="text-blue-600 hover:text-blue-800 font-medium text-xs bg-blue-50 px-3 py-1.5 rounded-md transition-colors">
           Manage
         </button>
-      ) 
+      )
     },
   ];
 
-  const handleAddStaff = (e) => {
-    e.preventDefault();
-    const newEntry = {
-      id: newStaff.empId || `STF-${Math.floor(10000 + Math.random() * 90000)}`,
-      name: `${newStaff.firstName} ${newStaff.lastName}`,
-      email: newStaff.email,
-      role: newStaff.role,
-      department: newStaff.department,
-      assignedClaims: 0,
-      status: 'Active',
-      joinedDate: new Date().toLocaleDateString('en-US', {month: 'short', day: '2-digit', year: 'numeric'}),
-      lastActive: 'Never'
-    };
-    
-    const updated = [newEntry, ...staffList];
-    setStaffList(updated);
-    localStorage.setItem('ipp_admin_staff', JSON.stringify(updated));
-    setShowAddModal(false);
-    showToast('Staff account created successfully.', 'success');
+  const handleAddStaff = async e => {
+    e.preventDefault();try { await api('/admin/staff',{method:'POST',body:{...newStaff,name:newStaff.firstName+' '+newStaff.lastName,password:new FormData(e.currentTarget).get('password'),mustChangePassword:new FormData(e.currentTarget).get('mustChangePassword')==='on'}});setStaffList(await api('/admin/staff'));setShowAddModal(false);showToast('Staff account created.'); } catch(error){showToast(error.message,'error');}
   };
 
   return (
@@ -98,22 +93,20 @@ const AdminStaff = () => {
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 justify-between">
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search staff by name, ID or email..." 
+            <input
+              type="text"
+              placeholder="Search staff by name, ID or email..."
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-colors"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex gap-3">
-             <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
-               <Filter className="h-4 w-4 text-slate-500" /> Filters
-             </button>
+             <RecordFilter data={staffList} value={statusFilter} onChange={setStatusFilter}/>
           </div>
         </div>
-        
-        <DataTable columns={columns} data={filteredStaff} onRowClick={(row) => navigate(`/admin/staff/${row.id}`)} />
+
+        <DataTable columns={columns} data={filteredStaff.filter(r=>!statusFilter||r.status===statusFilter)} onRowClick={(row) => navigate(`/admin/staff/${row.id}`)} />
       </div>
 
       {/* Add Staff Modal */}
@@ -162,15 +155,15 @@ const AdminStaff = () => {
                 <option>Claims Officer</option>
                 <option>Policy Officer</option>
                 <option>Finance Officer</option>
-                <option>Customer Support</option>
+                <option>Support Officer</option>
               </select>
             </div>
           </div>
           <div className="pt-4 border-t border-slate-100">
              <label className="block text-sm font-semibold text-slate-700 mb-1">Temporary Password *</label>
-             <input required type="text" defaultValue="Temp@12345" className="w-full max-w-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3" />
+             <input required name="password" type="password" minLength={8} className="w-full max-w-xs px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3" />
              <label className="flex items-center gap-2">
-               <input type="checkbox" defaultChecked className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+               <input name="mustChangePassword" type="checkbox" defaultChecked className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                <span className="text-sm text-slate-600">Require password change on first login</span>
              </label>
           </div>

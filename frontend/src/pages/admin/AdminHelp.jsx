@@ -1,14 +1,14 @@
-import React from 'react';
+import { api } from '../../utils/api';
+import SupportInbox from '../../components/SupportInbox';
+import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Search, ChevronDown, MessageSquare, LifeBuoy, FileText, Settings, Users, Shield } from 'lucide-react';
 import { showToast } from '../../utils/toast';
 
 const AdminHelp = () => {
+  const navigate=useNavigate();const [search,setSearch]=useState('');
 
-  const handleSupportSubmit = (e) => {
-    e.preventDefault();
-    showToast('Support ticket SUP-2026-00124 created successfully.', 'success');
-    e.target.reset();
-  };
+  const handleSupportSubmit = async e => {e.preventDefault();const form=e.currentTarget;const data=Object.fromEntries(new FormData(form));try{const result=await api('/tickets',{method:'POST',body:{subject:data.subject,message:data.category+' / '+data.priority+': '+data.message}});showToast('Support request '+result.id+' saved.');form.reset();}catch(e){showToast(e.message,'error');}};
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -21,9 +21,9 @@ const AdminHelp = () => {
           <p className="text-slate-300 mb-8 max-w-xl mx-auto">Find answers or get assistance with Insurance Pro Plus administration.</p>
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="How can we help you?" 
+            <input
+              type="text"
+              placeholder="How can we help you?" value={search} onChange={e=>setSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-4 bg-white rounded-xl text-slate-900 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all text-lg"
             />
           </div>
@@ -37,7 +37,7 @@ const AdminHelp = () => {
           { title: 'Processing Claims', icon: FileText },
           { title: 'Payments & Revenue', icon: LifeBuoy },
         ].map((item, i) => (
-          <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group text-center">
+          <div key={i} role="link" tabIndex={0} onClick={()=>navigate(['/admin/customers','/admin/policies','/admin/claims','/admin/payments'][i])} onKeyDown={e=>{if(e.key==='Enter')navigate(['/admin/customers','/admin/policies','/admin/claims','/admin/payments'][i]);}} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group text-center">
              <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-600 transition-colors">
                <item.icon className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
              </div>
@@ -46,8 +46,8 @@ const AdminHelp = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+      <SupportInbox admin/><div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         {/* FAQs */}
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-xl font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
@@ -56,7 +56,7 @@ const AdminHelp = () => {
             { q: "How do I assign a claims officer?", a: "In the Claim Details page, click 'Assign Officer'. A modal will appear allowing you to select an available claims officer from the dropdown." },
             { q: "How do I verify customer documents?", a: "Go to the Documents section, find the document that is 'Pending Verification', click 'Review', and then select 'Mark as Verified' in the document preview panel." },
             { q: "How do I create a staff account?", a: "Navigate to Staff Management and click '+ Add Staff Member'. Fill out the required details including their role and department, then submit." }
-          ].map((faq, i) => (
+          ].filter(faq=>(faq.q+faq.a).toLowerCase().includes(search.toLowerCase())).map((faq, i) => (
             <details key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm group">
               <summary className="p-4 font-bold text-slate-900 cursor-pointer flex justify-between items-center list-none">
                 {faq.q}
@@ -81,16 +81,16 @@ const AdminHelp = () => {
                   <p className="text-xs text-slate-500">Contact internal IT support</p>
                 </div>
              </div>
-             
+
              <form onSubmit={handleSupportSubmit} className="space-y-4">
                <div>
                  <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
-                 <input required type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Brief summary" />
+                 <input name="subject" required minLength={3} type="text" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Brief summary" />
                </div>
                <div className="grid grid-cols-2 gap-3">
                  <div>
                    <label className="block text-sm font-semibold text-slate-700 mb-1">Category</label>
-                   <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                   <select name="category" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                      <option>Technical Issue</option>
                      <option>Account & Access</option>
                      <option>Claims System</option>
@@ -100,7 +100,7 @@ const AdminHelp = () => {
                  </div>
                  <div>
                    <label className="block text-sm font-semibold text-slate-700 mb-1">Priority</label>
-                   <select className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                   <select name="priority" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                      <option>Low</option>
                      <option>Medium</option>
                      <option>High</option>
@@ -109,7 +109,7 @@ const AdminHelp = () => {
                </div>
                <div>
                  <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
-                 <textarea required rows="4" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Provide details..."></textarea>
+                 <textarea name="message" required minLength={5} rows="4" className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Provide details..."></textarea>
                </div>
                <button type="submit" className="w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">
                  Submit Support Request

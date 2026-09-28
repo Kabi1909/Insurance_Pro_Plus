@@ -1,3 +1,4 @@
+import { showToast } from '../utils/toast';
 import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,8 +11,16 @@ const Claims = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const storedClaims = readCollection('ipp_claims');
-    setClaims(storedClaims);
+    let active = true;
+    (async () => {
+      try {
+
+    const storedClaims = await readCollection('ipp_claims');
+    if (active) setClaims(storedClaims);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
   const getStatusBadge = (status) => {
@@ -26,8 +35,8 @@ const Claims = () => {
   const tabs = ['All Claims', 'Open', 'Approved', 'Completed'];
 
   const filteredClaims = claims.filter(c => {
-    const isTabMatch = 
-      activeTab === 'All Claims' || 
+    const isTabMatch =
+      activeTab === 'All Claims' ||
       (activeTab === 'Open' && c.status === 'Under Review') ||
       c.status === activeTab;
     const isSearchMatch = c.id.toLowerCase().includes(search.toLowerCase()) || c.policyName.toLowerCase().includes(search.toLowerCase());
@@ -38,7 +47,7 @@ const Claims = () => {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-textMain">Claims Management</h1>
-        <button 
+        <button
           onClick={() => navigate('/claims/new')}
           className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-primary-dark transition-colors"
         >
@@ -104,7 +113,7 @@ const Claims = () => {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <button 
+                      <button
                         onClick={() => navigate(`/claims/${claim.id}`)}
                         className="text-primary hover:text-primary-dark font-medium"
                       >
@@ -122,7 +131,7 @@ const Claims = () => {
             <h3 className="text-lg font-medium text-textMain">No claims found</h3>
             <p className="text-textSecondary mt-1">When you submit a claim, it will appear here.</p>
             {activeTab === 'All Claims' && !search && (
-              <button 
+              <button
                 onClick={() => navigate('/claims/new')}
                 className="mt-6 inline-flex items-center gap-2 bg-white border border-borderMain text-textMain px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors"
               >

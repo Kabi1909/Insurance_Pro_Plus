@@ -1,3 +1,5 @@
+import { api } from '../utils/api';
+import { showToast } from '../utils/toast';
 import { readCollection } from '../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,8 +12,16 @@ const Policies = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const storedPolicies = readCollection('ipp_policies');
-    setPolicies(storedPolicies);
+    let active = true;
+    (async () => {
+      try {
+
+    const storedPolicies = await readCollection('ipp_policies');
+    if (active) setPolicies(storedPolicies);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
   const getStatusColor = (status) => {
@@ -38,7 +48,7 @@ const Policies = () => {
       {/* Filters and Search */}
       <div className="bg-white p-4 rounded-xl border border-borderMain shadow-sm flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex flex-wrap gap-2">
-          {['All', 'Active', 'Expiring Soon', 'Expired'].map(f => (
+          {['All', 'Active', 'Pending Payment', 'Expired', 'Cancelled', 'Suspended'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -81,7 +91,7 @@ const Policies = () => {
                   {policy.status}
                 </span>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <span className="block text-xs text-textSecondary mb-1">Insurance Type</span>
@@ -101,21 +111,21 @@ const Policies = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-gray-50 px-5 py-4 border-t border-borderMain flex flex-wrap gap-3">
-              <button 
+              <button
                 onClick={() => navigate(`/policies/${policy.id}`)}
                 className="flex-1 min-w-[120px] bg-white border border-borderMain text-textMain px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
               >
                 View Details
               </button>
-              <button 
+              <button
                 onClick={() => navigate(`/policies/${policy.id}?renew=true`)}
                 className="flex-1 min-w-[120px] bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-dark transition-colors"
               >
                 Renew
               </button>
-              <button 
+              <button onClick={async()=>{if(!window.confirm('Cancel this policy? Coverage will stop.'))return;try{await api('/policies/'+policy.id+'/cancel',{method:'POST',body:{}});setPolicies(list=>list.map(p=>p.id===policy.id?{...p,status:'Cancelled'}:p));}catch(e){showToast(e.message,'error');}}} disabled={policy.status==='Cancelled'}
                 className="flex-1 min-w-[120px] bg-white border border-borderMain text-error px-4 py-2 rounded-md text-sm font-medium hover:bg-red-50 transition-colors"
               >
                 Cancel Policy

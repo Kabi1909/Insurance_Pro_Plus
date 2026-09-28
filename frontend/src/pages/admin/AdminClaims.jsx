@@ -1,3 +1,6 @@
+import RecordFilter from '../../components/admin/RecordFilter';
+import { download, money } from '../../utils/api';
+import { showToast } from '../../utils/toast';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,17 +10,26 @@ import DataTable from '../../components/admin/DataTable';
 import { Search, Filter, AlertCircle, FileText, CheckCircle, XCircle, DollarSign, Download } from 'lucide-react';
 
 const AdminClaims = () => {
+  const [statusFilter,setStatusFilter]=useState('');
   const navigate = useNavigate();
   const [claims, setClaims] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const data = readCollection('ipp_admin_claims');
-    setClaims(data);
+    let active = true;
+    (async () => {
+      try {
+
+    const data = await readCollection('ipp_admin_claims');
+    if (active) setClaims(data);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); }
+    })();
+    return () => { active = false; };
   }, []);
 
-  const filteredClaims = claims.filter(c => 
-    c.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredClaims = claims.filter(c =>
+    c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.customer.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -26,20 +38,20 @@ const AdminClaims = () => {
     { header: 'Customer', accessor: 'customer' },
     { header: 'Policy', accessor: 'policy', render: (row) => <span className="text-slate-500">{row.policy}</span> },
     { header: 'Type', accessor: 'type' },
-    { header: 'Amount', accessor: 'amount', render: (row) => `LKR ${row.amount.toLocaleString()}` },
+    { header: 'Amount', accessor: 'amount', render: (row) => `USD ${row.amount.toLocaleString()}` },
     { header: 'Date', accessor: 'submittedDate' },
     { header: 'Status', accessor: 'status', render: (row) => <StatusBadge status={row.status} /> },
     { header: 'Officer', accessor: 'officer' },
-    { 
-      header: 'Actions', 
+    {
+      header: 'Actions',
       render: (row) => (
-        <button 
+        <button
           onClick={(e) => { e.stopPropagation(); navigate(`/admin/claims/${row.id}`); }}
           className="text-blue-600 hover:text-blue-800 font-medium text-xs bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
         >
           View Details
         </button>
-      ) 
+      )
     },
   ];
 
@@ -62,37 +74,24 @@ const AdminClaims = () => {
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row gap-4 justify-between">
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by claim ID, customer or policy..." 
+            <input
+              type="text"
+              placeholder="Search by claim ID, customer or policy..."
               className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="flex gap-3">
-             <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
-               <Filter className="h-4 w-4 text-slate-500" />
-               Filters
-             </button>
-             <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
-               <Download className="h-4 w-4 text-slate-500" />
-               Export
+             <RecordFilter data={claims} value={statusFilter} onChange={setStatusFilter}/>
+             <button onClick={()=>download('/admin/export?kind=claims')} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"><Download className="h-4 w-4 text-slate-500" />Export
              </button>
           </div>
         </div>
-        
-        <DataTable columns={columns} data={filteredClaims} onRowClick={(row) => navigate(`/admin/claims/${row.id}`)} />
-        
+
+        <DataTable columns={columns} data={filteredClaims.filter(r=>!statusFilter||r.status===statusFilter)} onRowClick={(row) => navigate(`/admin/claims/${row.id}`)} />
+
         {/* Simple Pagination Mock */}
-        <div className="p-4 border-t border-slate-200 flex items-center justify-between text-sm text-slate-500">
-          <span>Showing 1 to {filteredClaims.length} of {filteredClaims.length} results</span>
-          <div className="flex gap-1">
-            <button className="px-3 py-1 border border-slate-200 rounded-md disabled:opacity-50">Previous</button>
-            <button className="px-3 py-1 bg-blue-600 text-white rounded-md">1</button>
-            <button className="px-3 py-1 border border-slate-200 rounded-md disabled:opacity-50">Next</button>
-          </div>
-        </div>
       </div>
     </div>
   );

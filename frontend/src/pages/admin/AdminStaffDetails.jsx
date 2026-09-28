@@ -1,3 +1,6 @@
+import { api, download } from '../../utils/api';
+import RelatedRecords from '../../components/RelatedRecords';
+import RecordEditor from '../../components/RecordEditor';
 import MissingRecord from '../../components/MissingRecord';
 import { readCollection } from '../../utils/storage';
 import React, { useState, useEffect } from 'react';
@@ -9,43 +12,39 @@ import Modal from '../../components/admin/Modal';
 import { showToast } from '../../utils/toast';
 
 const AdminStaffDetails = () => {
+  const [editor, setEditor] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
+  const [recordLoading,setRecordLoading]=useState(true);
   const [staff, setStaff] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');
   const [showSuspend, setShowSuspend] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
 
   useEffect(() => {
-    const data = readCollection('ipp_admin_staff');
+    let active = true;setRecordLoading(true);
+    (async () => {
+      try {
+
+    const data = await readCollection('ipp_admin_staff');
     const found = data.find(s => s.id === id);
-    setStaff(found || null);
+    if (active) setStaff(found || null);
+
+      } catch (error) { if (active) showToast(error.message, 'error'); } finally { if(active)setRecordLoading(false); }
+    })();
+    return () => { active = false; };
   }, [id]);
 
+  if(recordLoading)return <p className="p-6 text-slate-500">Loading record…</p>;
   if (!staff) return <MissingRecord label="Staff" backTo="/admin/staff" />;
 
-  const handleSuspend = () => {
-    const isSuspending = staff.status === 'Active';
-    const newStatus = isSuspending ? 'Suspended' : 'Active';
-    
-    const data = readCollection('ipp_admin_staff');
-    const updated = data.map(s => s.id === id ? { ...s, status: newStatus } : s);
-    localStorage.setItem('ipp_admin_staff', JSON.stringify(updated));
-    setStaff({ ...staff, status: newStatus });
-    setShowSuspend(false);
-    showToast(`Staff account ${newStatus.toLowerCase()} successfully.`, isSuspending ? 'warning' : 'success');
-  };
-
-  const handleEdit = (e) => {
-    e.preventDefault();
-    setShowEdit(false);
-    showToast('Staff profile updated successfully.', 'success');
-  };
-
+  const handleSuspend = async () => {try{await api('/admin/staff/'+id,{method:'PATCH',body:{status:staff.status==='Active'?'Suspended':'Active'}});setStaff(await api('/admin/staff/'+id));setShowSuspend(false);showToast('Account updated.');}catch(error){showToast(error.message,'error');}};
+  const handleEdit = async e => {e.preventDefault();try{await api('/admin/staff/'+id,{method:'PATCH',body:Object.fromEntries(new FormData(e.currentTarget))});setStaff(await api('/admin/staff/'+id));setShowEdit(false);showToast('Staff updated.');}catch(error){showToast(error.message,'error');}};
   const tabs = ['Overview', 'Assigned Work', 'Activity', 'Permissions'];
 
   return (
     <div className="space-y-6">
+      {editor && <RecordEditor {...editor} onClose={()=>setEditor(null)} onSaved={async()=>setStaff(await api('/admin/staff/'+id))} />}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <button onClick={() => navigate('/admin/staff')} className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 mb-2 transition-colors">
@@ -68,10 +67,11 @@ const AdminStaffDetails = () => {
            <button onClick={() => setShowEdit(true)} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
              Edit Staff
            </button>
-           <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
+           <button onClick={()=>setEditor({title:'Change Staff Role',path:'/admin/staff/'+id,initial:staff,fields:[{name:'role',label:'Role',options:['System Administrator','Claims Officer','Claims Manager','Finance Officer','Support Officer']}]})} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium">
              Change Role
            </button>
-           <button 
+           <button onClick={()=>setEditor({title:'Reset Password',path:'/admin/staff/'+id+'/password',method:'POST',fields:[{name:'password',label:'Temporary Password',type:'password'}]})} className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium">Reset Password</button>
+           <button
              onClick={() => setShowSuspend(true)}
              className={`px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium shadow-sm ${staff.status === 'Active' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
            >
@@ -92,7 +92,7 @@ const AdminStaffDetails = () => {
             </button>
           ))}
         </div>
-        
+
         <div className="p-6">
           {activeTab === 'Overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -115,11 +115,11 @@ const AdminStaffDetails = () => {
                   </div>
                   <div className="flex justify-between pb-2">
                     <span className="text-sm font-medium text-slate-500">Phone</span>
-                    <span className="text-sm font-medium text-slate-900">+94 77 123 4567</span>
+                    <span className="text-sm font-medium text-slate-900">{staff.phone || 'Not provided'}</span>
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
                   <ShieldAlert className="h-5 w-5 text-blue-600" /> Account Status
@@ -152,11 +152,11 @@ const AdminStaffDetails = () => {
                      </div>
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
                        <p className="text-slate-500 text-sm mb-1">Pending Reviews</p>
-                       <p className="text-2xl font-bold text-slate-900">4</p>
+                       <p className="text-2xl font-bold text-slate-900">{staff.pendingReviews||0}</p>
                      </div>
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
                        <p className="text-slate-500 text-sm mb-1">Completed (This Month)</p>
-                       <p className="text-2xl font-bold text-slate-900">28</p>
+                       <p className="text-2xl font-bold text-slate-900">{staff.completedThisMonth||0}</p>
                      </div>
                   </div>
                 </div>
@@ -169,20 +169,20 @@ const AdminStaffDetails = () => {
                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                  <Clock className="h-8 w-8 text-slate-400" />
                </div>
-               <p>This section is connected to the backend reporting service and will populate data when live.</p>
+               <RelatedRecords tab={activeTab} record={staff} entity="staff" />
             </div>
           )}
         </div>
       </div>
 
-      <ConfirmDialog 
-        isOpen={showSuspend} 
+      <ConfirmDialog
+        isOpen={showSuspend}
         title={staff.status === 'Active' ? "Suspend Staff Account?" : "Activate Staff Account?"}
-        message={staff.status === 'Active' 
-          ? `Are you sure you want to suspend ${staff.name}? They will immediately lose access to the administration portal.` 
+        message={staff.status === 'Active'
+          ? `Are you sure you want to suspend ${staff.name}? They will immediately lose access to the administration portal.`
           : `Are you sure you want to reactivate ${staff.name}'s account?`}
-        onConfirm={handleSuspend} 
-        onCancel={() => setShowSuspend(false)} 
+        onConfirm={handleSuspend}
+        onCancel={() => setShowSuspend(false)}
         confirmText={staff.status === 'Active' ? "Suspend Account" : "Activate Account"}
         type={staff.status === 'Active' ? "danger" : "success"}
       />
@@ -191,15 +191,15 @@ const AdminStaffDetails = () => {
          <form onSubmit={handleEdit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-              <input type="text" defaultValue={staff.name} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <input type="text" name="name" required defaultValue={staff.name} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Work Email</label>
-              <input type="email" defaultValue={staff.email} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <input type="email" readOnly defaultValue={staff.email} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input type="text" defaultValue="+94 77 123 4567" className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
+              <input type="text" name="phone" defaultValue={staff.phone||''} className="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500" />
             </div>
             <div className="pt-4 flex justify-end gap-3">
                <button type="button" onClick={() => setShowEdit(false)} className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Cancel</button>
