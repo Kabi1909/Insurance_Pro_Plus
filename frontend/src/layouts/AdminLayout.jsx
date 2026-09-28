@@ -1,3 +1,4 @@
+import ThemeToggle from '../components/ThemeToggle';
 import { paymentText } from '../utils/paymentText';
 import PasswordDialog from '../components/PasswordDialog';
 import { api } from '../utils/api';
@@ -212,7 +213,7 @@ const AdminLayout = () => {
 
           <div className="flex items-center gap-3 lg:gap-5 flex-1 justify-end">
 
-            {/* Global Search */}
+            <ThemeToggle />
             <div className="relative hidden md:block w-64 lg:w-80" ref={searchRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

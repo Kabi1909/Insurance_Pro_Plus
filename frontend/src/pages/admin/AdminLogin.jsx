@@ -1,3 +1,4 @@
+import ThemeToggle from '../../components/ThemeToggle';
 import { showToast } from '../../utils/toast';
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -32,7 +33,7 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50 font-sans">
-      {/* Left Side - Branding */}
+      <div className="absolute top-3 right-4 z-20"><ThemeToggle /></div>
       <div className="hidden lg:flex w-1/2 bg-[#0F2747] text-white flex-col justify-between p-12 relative overflow-hidden">
         {/* Abstract pattern background */}
         <div className="absolute inset-0 opacity-10">

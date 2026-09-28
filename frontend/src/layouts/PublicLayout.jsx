@@ -1,3 +1,4 @@
+import ThemeToggle from '../components/ThemeToggle';
 import PublicSearch from '../components/PublicSearch';
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
@@ -27,7 +28,7 @@ const PublicLayout = () => {
                   <Shield className="h-6 w-6 text-white" fill="currentColor" strokeWidth={1.5} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-bold leading-none tracking-tight">
+                  <span className="text-base sm:text-xl font-bold leading-none tracking-tight">
                     <span className="text-[#071A3D]">Insurance</span> <span className="text-[#0866FF]">Pro Plus</span>
                   </span>
                   <span className="text-[10px] font-medium text-[#52627A] mt-0.5 tracking-wide">Secure Today, Brighter Tomorrow</span>
@@ -52,7 +53,7 @@ const PublicLayout = () => {
             </nav>
 
             {/* Right Navigation */}
-            <div className="hidden md:flex items-center space-x-5">
+            <div className="hidden md:flex items-center space-x-5"><ThemeToggle />
               <button aria-label="Search insurance" onClick={()=>setSearchOpen(true)} className="text-[#081A3A] hover:text-[#0866FF] transition-colors p-2">
                 <Search className="h-5 w-5" />
               </button>
@@ -81,7 +82,7 @@ const PublicLayout = () => {
             </div>
 
             {/* Mobile menu button */}
-            <div className="flex items-center lg:hidden gap-4">
+            <div className="flex items-center lg:hidden gap-2"><span className="md:hidden"><ThemeToggle /></span>
               <button aria-label="Search insurance" onClick={()=>setSearchOpen(true)} className="text-[#081A3A] md:hidden">
                 <Search className="h-5 w-5" />
               </button>

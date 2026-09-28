@@ -1,3 +1,4 @@
+import ThemeToggle from '../components/ThemeToggle';
 import { paymentText } from '../utils/paymentText';
 import PasswordDialog from '../components/PasswordDialog';
 import PublicSearch from '../components/PublicSearch';
@@ -139,6 +140,7 @@ const AuthLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="relative">
               <button
                 className="p-2 text-textSecondary hover:text-textMain hover:bg-gray-100 rounded-full relative"
