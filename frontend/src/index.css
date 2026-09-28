@@ -9,6 +9,7 @@
 @import "./styles/overlays.css";
 @import "./styles/badges.css";
 @import "./styles/imagery.css";
+@import "./styles/headings.css";
 
 @theme {
   --color-primary: #2563EB;

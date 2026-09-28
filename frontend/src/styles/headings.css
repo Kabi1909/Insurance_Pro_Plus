@@ -1,0 +1,9 @@
+/* Animate content, never the main scroll container or fixed-overlay ancestors. */
+@media (prefers-reduced-motion: no-preference) {
+  main h1 { animation: ipp-rise-in var(--ipp-slow) var(--ipp-ease); }
+  main h1 + p {
+    animation: ipp-rise-in var(--ipp-slow) var(--ipp-ease) 60ms backwards;
+  }
+}
+main h1 { text-wrap: balance; }
+main h2 { text-wrap: pretty; }
