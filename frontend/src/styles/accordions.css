@@ -1,0 +1,13 @@
+/* Targets the existing FAQ answer panel without changing its open/close logic. */
+main .overflow-hidden > button + .border-t {
+  animation: ipp-fade-in var(--ipp-medium) ease-out;
+}
+main .overflow-hidden > button:has(.lucide-chevron-up) {
+  background-color: #eff6ff;
+}
+main .overflow-hidden > button :is(.lucide-chevron-up, .lucide-chevron-down) {
+  transition: color var(--ipp-fast);
+}
+main .overflow-hidden > button:focus-visible {
+  outline-offset: -4px;
+}
