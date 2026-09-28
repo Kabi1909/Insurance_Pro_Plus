@@ -1,0 +1,15 @@
+:where(main .grid > .bg-white):is(.rounded-xl, .rounded-2xl, .rounded-lg) {
+  transition: box-shadow var(--ipp-medium), border-color var(--ipp-medium),
+    translate var(--ipp-medium) var(--ipp-ease);
+}
+:where(main .grid > .bg-white):is(.rounded-xl, .rounded-2xl, .rounded-lg):focus-within {
+  border-color: rgb(37 99 235 / 35%);
+  box-shadow: var(--ipp-shadow);
+}
+@media (hover: hover) and (pointer: fine) {
+  :where(main .grid > .bg-white):is(.rounded-xl, .rounded-2xl, .rounded-lg):hover {
+    translate: 0 -4px;
+    border-color: rgb(37 99 235 / 25%);
+    box-shadow: var(--ipp-shadow);
+  }
+}
