@@ -5,6 +5,7 @@
 @import "./styles/navigation.css";
 @import "./styles/cards.css";
 @import "./styles/forms.css";
+@import "./styles/tables.css";
 
 @theme {
   --color-primary: #2563EB;

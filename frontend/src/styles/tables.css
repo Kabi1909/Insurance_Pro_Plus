@@ -1,0 +1,14 @@
+main tbody tr {
+  transition: background-color var(--ipp-fast), box-shadow var(--ipp-fast);
+}
+main tbody tr:focus-within {
+  background-color: rgb(239 246 255 / 80%);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  main tbody tr:hover {
+    background-color: rgb(239 246 255 / 70%);
+    box-shadow: inset 3px 0 0 rgb(37 99 235 / 45%);
+  }
+}
+main thead th { text-wrap: nowrap; }
