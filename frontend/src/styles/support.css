@@ -1,0 +1,17 @@
+.fixed.bottom-6.right-6.bg-white {
+  transform-origin: bottom right;
+  animation: ipp-panel-in var(--ipp-medium) var(--ipp-ease);
+  box-shadow: 0 20px 60px -18px rgb(15 39 71 / 35%);
+  max-width: calc(100vw - 3rem);
+  max-height: calc(100dvh - 3rem);
+}
+button.fixed.bottom-6.right-6 {
+  box-shadow: 0 8px 24px -6px rgb(37 99 235 / 50%);
+}
+.fixed.bottom-6.right-6 .flex-1.overflow-y-auto > .flex {
+  animation: ipp-fade-in var(--ipp-medium) ease-out;
+}
+body > :is([role="status"], [role="alert"]).fixed {
+  max-width: calc(100vw - 2rem);
+  box-shadow: 0 12px 32px -10px rgb(15 39 71 / 30%);
+}

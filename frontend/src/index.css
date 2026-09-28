@@ -12,6 +12,7 @@
 @import "./styles/headings.css";
 @import "./styles/accessibility.css";
 @import "./styles/accordions.css";
+@import "./styles/support.css";
 
 @theme {
   --color-primary: #2563EB;
